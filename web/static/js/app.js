@@ -100,6 +100,17 @@ document.addEventListener("DOMContentLoaded", () => {
           if (modShorts) modShorts.checked = c.modules.shorts_enabled ?? true;
           if (modThreads) modThreads.checked = c.modules.threads_enabled ?? false;
         }
+
+        // Showroom Public URL
+        const publicShowroomInput = document.getElementById("showroom-public-url-input");
+        if (publicShowroomInput) publicShowroomInput.value = c.showroom?.public_url || "";
+
+        // YouTube Settings
+        const ytEnabled = document.getElementById("cfg-yt-enabled");
+        const ytPrivacy = document.getElementById("cfg-yt-privacy");
+        if (ytEnabled) ytEnabled.checked = c.youtube?.enabled ?? true;
+        if (ytPrivacy) ytPrivacy.value = c.youtube?.privacy_status || "public";
+
         if (c.coupang) {
           const elKey = document.getElementById("cfg-coupang-access-key");
           const elSec = document.getElementById("cfg-coupang-secret-key");
@@ -136,6 +147,30 @@ document.addEventListener("DOMContentLoaded", () => {
           const elWebhook = document.getElementById("cfg-discord-webhook");
           if (elWebhook) elWebhook.value = c.notifications.discord_webhook || "";
         }
+      }
+
+      // Check YouTube OAuth status
+      try {
+        const ytRes = await fetch("/api/youtube/status");
+        const ytData = await ytRes.json();
+        const ytBadge = document.getElementById("yt-auth-status-badge");
+        if (ytBadge) {
+          if (ytData.is_authenticated) {
+            ytBadge.style.background = "rgba(34, 197, 94, 0.2)";
+            ytBadge.style.color = "#4ADE80";
+            ytBadge.textContent = "✅ Google OAuth 연동 완료 (24/7 자동 업로드 가동)";
+          } else if (ytData.secrets_file_exists) {
+            ytBadge.style.background = "rgba(56, 189, 248, 0.2)";
+            ytBadge.style.color = "#38BDF8";
+            ytBadge.textContent = "⚡ client_secrets 준비됨 (첫 업로드 시 1회 승인 대기)";
+          } else {
+            ytBadge.style.background = "rgba(251, 191, 36, 0.15)";
+            ytBadge.style.color = "#FBBF24";
+            ytBadge.textContent = "💡 시뮬레이션 모드 (client_secrets.json 등록 시 자동 송출)";
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load YouTube status:", err);
       }
     } catch (e) {
       console.error("Failed to load status:", e);
@@ -552,6 +587,57 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Action: Deploy Showroom to GitHub Pages
+  const btnDeployGithub = document.getElementById("btn-deploy-github");
+  if (btnDeployGithub) {
+    btnDeployGithub.addEventListener("click", async () => {
+      btnDeployGithub.disabled = true;
+      btnDeployGithub.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> GitHub 배포 중...';
+      try {
+        const res = await fetch("/api/showroom/deploy-github", { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+          showToast("🎉 " + data.message);
+        } else {
+          showToast("⚠️ " + (data.error || "배포 실패"));
+        }
+      } catch (e) {
+        showToast("요청 실패: " + e.message);
+      } finally {
+        btnDeployGithub.disabled = false;
+        btnDeployGithub.innerHTML = '<i class="ri-upload-cloud-line"></i> GitHub 배포/동기화';
+      }
+    });
+  }
+
+  // Action: Quick Save Showroom Public URL
+  const btnSavePublicUrl = document.getElementById("btn-save-public-url");
+  if (btnSavePublicUrl) {
+    btnSavePublicUrl.addEventListener("click", async () => {
+      const publicUrl = document.getElementById("showroom-public-url-input")?.value.trim() || "";
+      try {
+        const statusRes = await fetch("/api/status");
+        const statusData = await statusRes.json();
+        const currentConfig = statusData.config || {};
+        currentConfig.showroom = currentConfig.showroom || {};
+        currentConfig.showroom.public_url = publicUrl;
+
+        const res = await fetch("/api/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ config: currentConfig })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("✅ 공개 쇼룸 URL이 저장되었습니다! (숏츠 설명에 자동 삽입)");
+          loadStatus();
+        }
+      } catch (e) {
+        showToast("저장 실패: " + e.message);
+      }
+    });
+  }
+
   // Action: Toggle Scheduler
   const toggleBtn = document.getElementById("btn-toggle-scheduler");
   if (toggleBtn) {
@@ -583,6 +669,14 @@ document.addEventListener("DOMContentLoaded", () => {
           shorts_enabled: modShorts ? modShorts.checked : true,
           threads_enabled: modThreads ? modThreads.checked : false,
           showroom_enabled: true
+        },
+        showroom: {
+          public_url: (document.getElementById("showroom-public-url-input")?.value || "").trim()
+        },
+        youtube: {
+          enabled: document.getElementById("cfg-yt-enabled") ? document.getElementById("cfg-yt-enabled").checked : true,
+          privacy_status: document.getElementById("cfg-yt-privacy")?.value || "public",
+          simulation_mode: false
         },
         coupang: {
           access_key: (document.getElementById("cfg-coupang-access-key")?.value || "").trim(),

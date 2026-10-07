@@ -121,6 +121,18 @@ class AutoPilotScheduler:
         ShowroomBuilder.build_showroom_html()
         save_log("INFO", "showroom", f"Showroom catalog updated with #{item_num} {product.title}")
 
+        # 5. YouTube Shorts Auto-Publish
+        from modules.publisher.youtube_api import YouTubePublisher
+        yt_publisher = YouTubePublisher()
+        yt_res = yt_publisher.upload_short(
+            video_path=short_res.get("video_path"),
+            title=short_res.get("title"),
+            description=short_res.get("description"),
+            tags=short_res.get("tags")
+        )
+        yt_status = "published" if (yt_res.get("success") and not yt_res.get("simulated")) else ("simulated" if yt_res.get("simulated") else "render_only")
+        yt_video_id = yt_res.get("video_id", "")
+
         # Mark posted
         mark_product_posted(product.product_id)
 
@@ -133,7 +145,8 @@ class AutoPilotScheduler:
             main_text=short_res.get("title", ""),
             comment_1=short_res.get("description", ""),
             image_paths=short_res.get("video_path", ""),
-            status="rendered",
+            platform_post_id=yt_video_id,
+            status=yt_status,
             published_at=now_str
         )
         post_id = save_post_record(post_record)
@@ -144,7 +157,7 @@ class AutoPilotScheduler:
             category=product.category,
             price=product.price,
             deeplink=deeplink,
-            status="Shorts Rendered + Showroom Updated"
+            status=f"YouTube Shorts ({yt_status}) + Showroom Updated"
         )
 
         return {
@@ -157,7 +170,8 @@ class AutoPilotScheduler:
             "video_filename": short_res.get("video_filename"),
             "title": short_res.get("title"),
             "description": short_res.get("description"),
-            "tags": short_res.get("tags")
+            "tags": short_res.get("tags"),
+            "youtube": yt_res
         }
 
     def trigger_one_post(self, force_affiliate: bool = False) -> Dict[str, Any]:

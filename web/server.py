@@ -100,6 +100,43 @@ async def get_videos():
     return videos
 
 
+@app.get("/api/youtube/status")
+def get_youtube_status():
+    from modules.publisher.youtube_api import YouTubePublisher
+    yt = YouTubePublisher()
+    return {
+        "enabled": yt.enabled,
+        "is_authenticated": yt.is_authenticated(),
+        "has_credentials": yt.has_credentials(),
+        "secrets_file_exists": yt.secrets_file.exists(),
+        "privacy_status": yt.privacy_status
+    }
+
+
+@app.post("/api/showroom/deploy-github")
+def deploy_showroom_to_github():
+    import subprocess
+    from modules.showroom.builder import ShowroomBuilder
+    ShowroomBuilder.build_showroom_html()
+    try:
+        check_remote = subprocess.run(["git", "remote"], cwd=str(BASE_DIR), capture_output=True, text=True)
+        if not check_remote.stdout.strip():
+            return {
+                "success": False,
+                "error": "GitHub 원격 저장소가 등록되어 있지 않습니다. 터미널에서 'git remote add origin https://github.com/아이디/저장소.git'를 먼저 등록해주세요."
+            }
+        subprocess.run(["git", "add", "docs/", "showroom/"], cwd=str(BASE_DIR), check=True)
+        subprocess.run(["git", "commit", "-m", "Auto-update showroom catalog for GitHub Pages"], cwd=str(BASE_DIR))
+        res = subprocess.run(["git", "push"], cwd=str(BASE_DIR), capture_output=True, text=True)
+        if res.returncode == 0:
+            save_log("INFO", "showroom", "Showroom successfully deployed to GitHub Pages via git push!")
+            return {"success": True, "message": "GitHub Pages로 모바일 쇼룸 배포가 완료되었습니다!"}
+        else:
+            return {"success": False, "error": f"Git push 실패: {res.stderr}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
 @app.get("/api/status")
 async def get_system_status():
     cfg = load_config()

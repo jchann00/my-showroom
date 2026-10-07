@@ -208,9 +208,12 @@ class ShortsGenerator:
         save_log("INFO", "shorts", f"Shorts video exported successfully: {output_mp4.name} ({duration:.1f}s)")
 
         # YouTube Metadata Pack
+        from modules.showroom.builder import ShowroomBuilder
+        showroom_url = ShowroomBuilder.get_showroom_url()
         yt_title = f"[#{item_num}] 실제 써보고 놀란 이유! {product.title[:20]} 솔직후기 #shorts"
         yt_desc = (
-            f"영상 속 제품 구매처는 채널 프로필 상단 링크 쇼룸 [#{item_num}번 상품]을 클릭하세요!\n\n"
+            f"영상 속 제품 구매처는 채널 프로필 상단 링크 쇼룸 [#{item_num}번 상품]을 클릭하세요!\n"
+            f"👉 모바일 쇼룸 주소: {showroom_url}\n\n"
             f"• 상품명: {product.title}\n"
             f"• 가격: {product.price:,}원 (로켓배송)\n\n"
             f"이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.\n\n"

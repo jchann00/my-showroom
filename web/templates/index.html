@@ -240,7 +240,7 @@
               <div class="card-box">
                 <div class="card-box-header">
                   <h3>🔗 내 모바일 쇼룸 웹페이지 링크</h3>
-                  <button class="btn btn-secondary" id="btn-refresh-showroom"><i class="ri-refresh-line"></i> 쇼룸 새로고침</button>
+                  <button class="btn btn-secondary" id="btn-refresh-showroom"><i class="ri-refresh-line"></i> 새로고침</button>
                 </div>
                 <p style="font-size: 13px; color: var(--text-muted);">
                   유튜브 채널 홈(프로필) 링크란에 등록할 전용 주소입니다. 영상 속 번호(#1, #2...)와 일치하는 버튼을 누르면 고객이 1초 만에 쿠팡으로 이동합니다.
@@ -249,6 +249,29 @@
                   <input type="text" class="form-control" id="showroom-url-input" value="http://127.0.0.1:8080/showroom" readonly style="flex: 1; font-weight: 600; color: #38BDF8;">
                   <button class="btn btn-primary" id="btn-copy-showroom-url"><i class="ri-file-copy-line"></i> 복사하기</button>
                   <a href="/showroom" target="_blank" class="btn btn-secondary"><i class="ri-external-link-line"></i> 새 창 열기</a>
+                </div>
+              </div>
+
+              <!-- GitHub Pages Free Deployment Card -->
+              <div class="card-box" style="border: 1px solid rgba(56, 189, 248, 0.3); background: rgba(14, 165, 233, 0.04);">
+                <div class="card-box-header">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-github-fill" style="font-size: 20px; color: #38BDF8;"></i>
+                    <h3 style="color: #38BDF8;">🌐 외부 고객 접속용 무료 웹 배포 (GitHub Pages)</h3>
+                  </div>
+                  <button class="btn btn-primary" id="btn-deploy-github" style="background: linear-gradient(135deg, #0284C7, #2563EB); font-size: 12.5px;">
+                    <i class="ri-upload-cloud-line"></i> GitHub 배포/동기화
+                  </button>
+                </div>
+                <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.6;">
+                  쇼룸은 순수 반응형 HTML/CSS 파일(<code>docs/index.html</code>)로 만들어져 <strong>GitHub Pages를 통해 평생 100% 무료(트래픽 무제한)</strong>로 호스팅됩니다.
+                </p>
+                <div style="margin-top: 10px;">
+                  <label style="font-size: 12px; color: #CBD5E1; font-weight: 600; margin-bottom: 4px; display: block;">내 배포된 공개 쇼룸 URL (설정 시 숏츠 설명에 자동 삽입)</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="text" class="form-control" id="showroom-public-url-input" placeholder="예: https://내아이디.github.io/내저장소/" style="flex: 1; font-size: 13px;">
+                    <button class="btn btn-secondary" id="btn-save-public-url" style="font-size: 12px;">URL 저장</button>
+                  </div>
                 </div>
               </div>
 
@@ -449,6 +472,31 @@
               <div class="form-group">
                 <label>LLM API 키 (선택사항 - 미입력 시 고전환 템플릿 엔진 가동)</label>
                 <input type="password" class="form-control" id="cfg-gemini-api-key" placeholder="Gemini API Key 또는 해당 Provider 키">
+              </div>
+
+              <!-- YouTube Shorts Automation Section -->
+              <div class="form-group full-width" style="grid-column: span 2; background: rgba(225, 29, 72, 0.05); border: 1px solid rgba(225, 29, 72, 0.25); border-radius: 12px; padding: 14px; margin-top: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-weight: 700; color: #F43F5E; font-size: 14px;">🎬 유튜브 숏츠 자동 업로드 (YouTube Data API v3)</span>
+                  <span id="yt-auth-status-badge" style="background: rgba(251, 191, 36, 0.15); color: #FBBF24; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600;">연동 상태 확인 중...</span>
+                </div>
+                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #fff;">
+                    <input type="checkbox" id="cfg-yt-enabled" checked style="width: 16px; height: 16px; accent-color: #E11D48;">
+                    <span>숏츠 제작 완료 시 유튜브 채널에 즉시 자동 게시</span>
+                  </label>
+                  <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                    <span style="color: var(--text-muted);">게시 공개 상태:</span>
+                    <select class="form-control" id="cfg-yt-privacy" style="width: 140px; padding: 4px 8px; font-size: 12px;">
+                      <option value="public">전체 공개 (Public)</option>
+                      <option value="unlisted">일부 공개 (Unlisted)</option>
+                      <option value="private">비공개 (Private)</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
+                  💡 <strong>Google OAuth 연동 방법:</strong> Google Cloud 콘솔에서 OAuth 2.0 클라이언트 ID(데스크톱 앱)의 <code>client_secrets.json</code>을 <code>config/</code> 폴더에 넣으시면 1회 승인 후 24시간 완전 무인 자동 업로드됩니다. (미등록 시에도 영상 제작 및 다운로드, 쇼룸 갱신은 100% 정상 작동)
+                </div>
               </div>
 
               <!-- Threads & Meta Section -->

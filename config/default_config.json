@@ -19,6 +19,14 @@
     "threads_enabled": false,
     "showroom_enabled": true
   },
+  "youtube": {
+    "enabled": true,
+    "privacy_status": "public",
+    "simulation_mode": false
+  },
+  "showroom": {
+    "public_url": ""
+  },
   "threads": {
     "enabled": false,
     "user_id": "",

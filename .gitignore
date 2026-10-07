@@ -6,6 +6,8 @@ __pycache__/
 # Environment and sensitive user configurations
 .env
 config/user_config.json
+config/client_secrets.json
+config/youtube_token.json
 
 # Local SQLite databases, generated media
 data/automation.db

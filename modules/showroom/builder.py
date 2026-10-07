@@ -282,4 +282,19 @@ class ShowroomBuilder:
         with open(SHOWROOM_HTML_PATH, "w", encoding="utf-8") as f:
             f.write(html_content)
 
+        # Also write to docs/index.html for 1-click GitHub Pages deployment
+        docs_dir = BASE_DIR / "docs"
+        docs_dir.mkdir(parents=True, exist_ok=True)
+        with open(docs_dir / "index.html", "w", encoding="utf-8") as f:
+            f.write(html_content)
+
         return html_content
+
+    @classmethod
+    def get_showroom_url(cls) -> str:
+        """Returns the public showroom URL if configured, or default localhost URL."""
+        cfg = load_config()
+        public_url = cfg.get("showroom", {}).get("public_url", "").strip()
+        if public_url:
+            return public_url
+        return "http://127.0.0.1:8080/showroom"
