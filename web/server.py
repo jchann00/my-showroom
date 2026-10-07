@@ -16,12 +16,17 @@ from modules.scheduler.auto_pilot import AutoPilotScheduler
 
 app = FastAPI(title="Threads & Instagram Monetization Automation")
 
-# Mount static and image directories
-STATIC_DIR = BASE_DIR / "web" / "static"
-TEMPLATES_DIR = BASE_DIR / "web" / "templates"
+WEB_DIR = BASE_DIR / "web"
+STATIC_DIR = WEB_DIR / "static"
+TEMPLATES_DIR = WEB_DIR / "templates"
+VIDEOS_DIR = BASE_DIR / "data" / "videos"
+SHOWROOM_DIR = BASE_DIR / "showroom"
+VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+SHOWROOM_DIR.mkdir(parents=True, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 app.mount("/images", StaticFiles(directory=str(IMAGE_DIR)), name="images")
+app.mount("/videos", StaticFiles(directory=str(VIDEOS_DIR)), name="videos")
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
@@ -40,6 +45,8 @@ class SettingsUpdateRequest(BaseModel):
 @app.on_event("startup")
 def startup_event():
     cfg = load_config()
+    from modules.showroom.builder import ShowroomBuilder
+    ShowroomBuilder.build_showroom_html()
     if cfg.get("strategy", {}).get("auto_pilot_enabled", True):
         scheduler_instance.start()
         save_log("INFO", "system", "Auto-Pilot automation started on startup.")
@@ -48,6 +55,49 @@ def startup_event():
 @app.get("/", response_class=HTMLResponse)
 async def serve_index(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
+
+
+@app.get("/showroom", response_class=HTMLResponse)
+async def serve_showroom():
+    from modules.showroom.builder import ShowroomBuilder, SHOWROOM_HTML_PATH
+    if not SHOWROOM_HTML_PATH.exists():
+        ShowroomBuilder.build_showroom_html()
+    with open(SHOWROOM_HTML_PATH, "r", encoding="utf-8") as f:
+        return f.read()
+
+
+@app.post("/api/trigger/shorts")
+async def trigger_shorts():
+    try:
+        res = scheduler_instance.trigger_shorts_cycle()
+        return {"success": True, "data": res}
+    except Exception as e:
+        save_log("ERROR", "api", f"Shorts trigger error: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/trigger/threads")
+async def trigger_threads():
+    try:
+        res = scheduler_instance.trigger_one_post(force_affiliate=True)
+        return {"success": True, "data": res}
+    except Exception as e:
+        save_log("ERROR", "api", f"Threads trigger error: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/videos")
+async def get_videos():
+    from datetime import datetime
+    videos = []
+    for f in sorted(VIDEOS_DIR.glob("*.mp4"), key=os.path.getmtime, reverse=True):
+        videos.append({
+            "filename": f.name,
+            "size_mb": round(f.stat().st_size / (1024 * 1024), 2),
+            "created_at": datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S"),
+            "url": f"/videos/{f.name}"
+        })
+    return videos
 
 
 @app.get("/api/status")

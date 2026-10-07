@@ -7,9 +7,10 @@ __pycache__/
 .env
 config/user_config.json
 
-# Local SQLite databases and generated images
+# Local SQLite databases, generated media
 data/automation.db
-data/images/*.png
+data/images/*
+data/videos/*
 data/logs/*
 
 # OS generated files

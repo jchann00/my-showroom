@@ -14,11 +14,16 @@
     "model_name": "gemini-2.5-flash",
     "temperature": 0.7
   },
+  "modules": {
+    "shorts_enabled": true,
+    "threads_enabled": false,
+    "showroom_enabled": true
+  },
   "threads": {
-    "enabled": true,
+    "enabled": false,
     "user_id": "",
     "access_token": "",
-    "simulation_mode": true
+    "simulation_mode": false
   },
   "instagram": {
     "enabled": false,
