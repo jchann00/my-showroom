@@ -1,0 +1,55 @@
+{
+  "coupang": {
+    "access_key": "",
+    "secret_key": "",
+    "sub_id": "thread_auto",
+    "default_affiliate_link": "",
+    "use_crawler_fallback": true
+  },
+  "llm": {
+    "provider": "gemini",
+    "gemini_api_key": "",
+    "openai_api_key": "",
+    "claude_api_key": "",
+    "model_name": "gemini-2.5-flash",
+    "temperature": 0.7
+  },
+  "threads": {
+    "enabled": true,
+    "user_id": "",
+    "access_token": "",
+    "simulation_mode": true
+  },
+  "instagram": {
+    "enabled": false,
+    "user_id": "",
+    "access_token": "",
+    "simulation_mode": true
+  },
+  "filters": {
+    "min_price": 10000,
+    "max_price": 39900,
+    "min_rating": 4.5,
+    "min_reviews": 1000,
+    "require_rocket": true,
+    "categories": [
+      "생활용품",
+      "아이디어",
+      "펫상품",
+      "다이어트"
+    ]
+  },
+  "strategy": {
+    "golden_hours": ["07:30", "12:30", "21:30"],
+    "jitter_minutes": 15,
+    "affiliate_ratio": 1,
+    "info_post_ratio": 3,
+    "auto_pilot_enabled": true,
+    "reply_interval_seconds": 20
+  },
+  "notifications": {
+    "discord_webhook": "",
+    "telegram_bot_token": "",
+    "telegram_chat_id": ""
+  }
+}

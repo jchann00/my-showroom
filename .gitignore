@@ -1,0 +1,26 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment and sensitive user configurations
+.env
+config/user_config.json
+
+# Local SQLite databases and generated images
+data/automation.db
+data/images/*.png
+data/logs/*
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# IDE & Editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
