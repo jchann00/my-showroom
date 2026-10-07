@@ -10,7 +10,7 @@ config/client_secrets.json
 config/youtube_token.json
 
 # Local SQLite databases, generated media
-data/automation.db
+data/*.db
 data/images/*
 data/videos/*
 data/logs/*

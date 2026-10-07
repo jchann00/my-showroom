@@ -111,6 +111,19 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ytEnabled) ytEnabled.checked = c.youtube?.enabled ?? true;
         if (ytPrivacy) ytPrivacy.value = c.youtube?.privacy_status || "public";
 
+        if (c.tts) {
+          const elTtsProv = document.getElementById("cfg-tts-provider");
+          const elTtsVoice = document.getElementById("cfg-tts-voice");
+          const elTtsSpeed = document.getElementById("cfg-tts-speed");
+          const elElvKey = document.getElementById("cfg-elevenlabs-key");
+          const elElvVid = document.getElementById("cfg-elevenlabs-voice-id");
+          if (elTtsProv) elTtsProv.value = c.tts.provider || "edge_tts";
+          if (elTtsVoice) elTtsVoice.value = c.tts.edge_voice || "ko-KR-InJoonNeural";
+          if (elTtsSpeed) elTtsSpeed.value = c.tts.speed || "+15%";
+          if (elElvKey) elElvKey.value = c.tts.elevenlabs_api_key || "";
+          if (elElvVid) elElvVid.value = c.tts.elevenlabs_voice_id || "";
+        }
+
         if (c.coupang) {
           const elKey = document.getElementById("cfg-coupang-access-key");
           const elSec = document.getElementById("cfg-coupang-secret-key");
@@ -677,6 +690,13 @@ document.addEventListener("DOMContentLoaded", () => {
           enabled: document.getElementById("cfg-yt-enabled") ? document.getElementById("cfg-yt-enabled").checked : true,
           privacy_status: document.getElementById("cfg-yt-privacy")?.value || "public",
           simulation_mode: false
+        },
+        tts: {
+          provider: document.getElementById("cfg-tts-provider")?.value || "edge_tts",
+          edge_voice: document.getElementById("cfg-tts-voice")?.value || "ko-KR-InJoonNeural",
+          speed: document.getElementById("cfg-tts-speed")?.value || "+15%",
+          elevenlabs_api_key: (document.getElementById("cfg-elevenlabs-key")?.value || "").trim(),
+          elevenlabs_voice_id: (document.getElementById("cfg-elevenlabs-voice-id")?.value || "").trim()
         },
         coupang: {
           access_key: (document.getElementById("cfg-coupang-access-key")?.value || "").trim(),

@@ -3,15 +3,17 @@ import asyncio
 import subprocess
 import requests
 import io
+import re
 from pathlib import Path
-from typing import Dict, Any, Optional
-from PIL import Image, ImageDraw, ImageFont
-import edge_tts
+from typing import Dict, Any, Optional, Tuple
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import imageio_ffmpeg
 
 from config.settings import BASE_DIR, load_config
 from database.models import Product
 from database.db import save_log
+from modules.writer.shorts_script import ShortsScriptWriter
+from modules.video.tts_engine import TTSEngine
 
 VIDEOS_DIR = BASE_DIR / "data" / "videos"
 FONT_BOLD = "C:\\Windows\\Fonts\\malgunbd.ttf"
@@ -19,132 +21,57 @@ FONT_REGULAR = "C:\\Windows\\Fonts\\malgun.ttf"
 
 
 class ShortsGenerator:
-    """Generates 9:16 vertical 15-second YouTube Shorts video with AI Voiceover and Subtitles."""
+    """
+    High-Quality 9:16 Vertical YouTube Shorts Generator with:
+    - Product-tailored AI Viral Scripts (ShortsScriptWriter)
+    - Natural Korean Voiceover & Voice Cloning Support (TTSEngine)
+    - 3-Scene Dynamic Visual Montage & Animated Bottom Progress Bar
+    - Full HD 1080x1920 High-Bitrate H.264 Rendering
+    """
 
     def __init__(self):
         VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
         self.ffmpeg_exe = imageio_ffmpeg.get_ffmpeg_exe()
         self.width = 1080
         self.height = 1920
+        self.script_writer = ShortsScriptWriter()
+        self.tts = TTSEngine()
 
     def _get_font(self, size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
         font_path = FONT_BOLD if bold else FONT_REGULAR
         if os.path.exists(font_path):
-            return ImageFont.truetype(font_path, size)
+            try:
+                return ImageFont.truetype(font_path, size)
+            except Exception:
+                pass
         try:
             return ImageFont.truetype("arial.ttf", size)
         except Exception:
             return ImageFont.load_default()
 
-    def _run_coroutine(self, coro):
-        """Runs an async coroutine safely, even if called inside an active event loop."""
-        try:
-            loop = asyncio.get_running_loop()
-        except RuntimeError:
-            loop = None
-
-        if loop and loop.is_running():
-            import concurrent.futures
-            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
-                return pool.submit(asyncio.run, coro).result()
-        else:
-            return asyncio.run(coro)
-
-    async def _generate_voiceover(self, text: str, output_path: str):
-        """Generates natural Korean voiceover using Edge TTS neural model."""
-        communicate = edge_tts.Communicate(text, "ko-KR-SunHiNeural")
-        await communicate.save(output_path)
-
     def _get_audio_duration(self, audio_path: str) -> float:
         """Probes audio duration using ffmpeg."""
         cmd = [self.ffmpeg_exe, "-i", audio_path]
         res = subprocess.run(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, encoding="utf-8", errors="ignore")
-        # Look for "Duration: 00:00:12.34"
-        import re
         match = re.search(r"Duration:\s*(\d+):(\d+):(\d+\.\d+)", res.stderr)
         if match:
             hours, minutes, seconds = match.groups()
             return float(hours) * 3600 + float(minutes) * 60 + float(seconds)
-        return 12.0  # default fallback duration
+        return 13.5
 
-    def _render_frames(self, product: Product, item_num: int, hook_text: str) -> tuple[Path, Path]:
-        """Renders 2 vertical 1080x1920 frames for the Short."""
-        frame1_path = VIDEOS_DIR / f"{product.product_id}_f1.png"
-        frame2_path = VIDEOS_DIR / f"{product.product_id}_f2.png"
+    def _create_base_canvas(self) -> Tuple[Image.Image, ImageDraw.Draw]:
+        """Creates a modern, cinematic dark studio gradient background."""
+        base = Image.new("RGB", (self.width, self.height), color="#090D16")
+        draw = ImageDraw.Draw(base)
 
-        # --- FRAME 1: Hook & Problem ---
-        img1 = Image.new("RGB", (self.width, self.height), color="#0F172A")
-        draw1 = ImageDraw.Draw(img1)
+        # Subtle ambient radial glow in the center
+        glow = Image.new("RGBA", (self.width, self.height), (0, 0, 0, 0))
+        glow_draw = ImageDraw.Draw(glow)
+        glow_draw.ellipse((140, 400, 940, 1200), fill=(30, 58, 138, 45))  # Deep indigo glow
+        glow = glow.filter(ImageFilter.GaussianBlur(80))
+        base.paste(glow, (0, 0), glow)
 
-        # Top Tag: Item Number
-        tag_text = f"🔥 숏츠 속 #{item_num}번 꿀템"
-        draw1.rounded_rectangle((80, 120, 480, 210), radius=16, fill="#E11D48")
-        draw1.text((110, 145), tag_text, font=self._get_font(42, bold=True), fill="#FFFFFF")
-
-        # Big Hook Title
-        y_pos = 260
-        for line in hook_text.split("\n")[:2]:
-            draw1.text((80, y_pos), line, font=self._get_font(64, bold=True), fill="#F8FAFC")
-            y_pos += 85
-
-        # Product Image (Center)
-        prod_img = self._load_product_image(product.image_url)
-        center_box = (80, 480, 1000, 1380)
-        draw1.rounded_rectangle(center_box, radius=32, fill="#1E293B", outline="#334155", width=3)
-        if prod_img:
-            prod_img.thumbnail((800, 800), Image.Resampling.LANCZOS)
-            px = 80 + (920 - prod_img.width) // 2
-            py = 480 + (900 - prod_img.height) // 2
-            img1.paste(prod_img, (px, py))
-
-        # Bottom Callout Box
-        cta_box = (80, 1440, 1000, 1780)
-        draw1.rounded_rectangle(cta_box, radius=24, fill="#1E293B", outline="#2563EB", width=3)
-        draw1.text((130, 1480), f"✓ {product.title[:24]}", font=self._get_font(44, bold=True), fill="#FBBF24")
-        draw1.text((130, 1560), f"가격: {product.price:,}원 (로켓배송)", font=self._get_font(38), fill="#38BDF8")
-        draw1.text((130, 1640), f"평점: ★ {product.rating} ({product.review_count:,}개 리뷰)", font=self._get_font(36), fill="#94A3B8")
-
-        # Bottom Bar
-        draw1.rounded_rectangle((80, 1810, 1000, 1890), radius=16, fill="#2563EB")
-        draw1.text((150, 1830), f"👉 구매처: 프로필 링크 쇼룸 [#{item_num}번 상품] 클릭!", font=self._get_font(34, bold=True), fill="#FFFFFF")
-        img1.save(frame1_path, quality=95)
-
-        # --- FRAME 2: Feature & CTA Detail ---
-        img2 = Image.new("RGB", (self.width, self.height), color="#0F172A")
-        draw2 = ImageDraw.Draw(img2)
-
-        # Header
-        draw2.text((80, 120), f"⚡ #{item_num}번 상품 실사용 포인트", font=self._get_font(44, bold=True), fill="#38BDF8")
-        draw2.text((80, 190), "구매 전 꼭 알아둘 장점", font=self._get_font(68, bold=True), fill="#F8FAFC")
-
-        # 3 Points Box
-        points = [
-            ("1. 가성비 & 품질", f"{product.price:,}원대로 부담 없이 삶의 질 향상"),
-            ("2. 검증된 후기", f"실제 리뷰 {product.review_count:,}개 / 평점 {product.rating}점"),
-            ("3. 빠른 도착", "로켓배송으로 내일 주문 즉시 바로 수령")
-        ]
-
-        yb = 320
-        for title, desc in points:
-            draw2.rounded_rectangle((80, yb, 1000, yb + 220), radius=24, fill="#1E293B", outline="#334155", width=2)
-            draw2.text((130, yb + 40), title, font=self._get_font(48, bold=True), fill="#FBBF24")
-            draw2.text((130, yb + 115), desc, font=self._get_font(38), fill="#CBD5E1")
-            yb += 260
-
-        # Big CTA Box
-        cta_big = (80, 1200, 1000, 1750)
-        draw2.rounded_rectangle(cta_big, radius=30, fill="#E11D48")
-        draw2.text((150, 1300), f"📌 [#{item_num}번 상품] 구매 방법", font=self._get_font(52, bold=True), fill="#FFFFFF")
-        draw2.text((130, 1420), "1. 채널 홈(프로필) 상단 링크 클릭", font=self._get_font(42, bold=True), fill="#F8FAFC")
-        draw2.text((130, 1510), f"2. 쇼룸에서 [#{item_num}번] 버튼 누르면 끝!", font=self._get_font(42, bold=True), fill="#FDE047")
-        draw2.text((130, 1600), "3. 쿠팡 최저가 & 할인 혜택 바로 이동", font=self._get_font(38), fill="#F8FAFC")
-
-        # Bottom Bar
-        draw2.rounded_rectangle((80, 1800, 1000, 1880), radius=16, fill="#2563EB")
-        draw2.text((150, 1822), f"👉 구매처: 프로필 링크 쇼룸 [#{item_num}번 상품]", font=self._get_font(34, bold=True), fill="#FFFFFF")
-        img2.save(frame2_path, quality=95)
-
-        return frame1_path, frame2_path
+        return base, draw
 
     def _load_product_image(self, url: Optional[str]) -> Optional[Image.Image]:
         if not url:
@@ -152,51 +79,181 @@ class ShortsGenerator:
         try:
             res = requests.get(url, timeout=5)
             if res.status_code == 200:
-                return Image.open(io.BytesIO(res.content)).convert("RGB")
+                return Image.open(io.BytesIO(res.content)).convert("RGBA")
         except Exception:
             pass
         return None
 
+    def _render_scene_1(self, product: Product, item_num: int, script_pkg: Dict[str, Any], prod_img: Optional[Image.Image]) -> Path:
+        """Scene 1: 0~4s Hook & Curiosity Trigger."""
+        canvas, draw = self._create_base_canvas()
+        out_path = VIDEOS_DIR / f"{product.product_id}_sc1.png"
+
+        # Top Tag: Category & Badge
+        badge_text = script_pkg.get("badge", f"🔥 숏츠 속 #{item_num}번 꿀템")
+        draw.rounded_rectangle((70, 110, 540, 195), radius=16, fill="#E11D48")
+        draw.text((100, 132), badge_text, font=self._get_font(38, bold=True), fill="#FFFFFF")
+
+        # Big Hook Title (High-contrast yellow & white)
+        hook_lines = script_pkg.get("hook", "").split("\n")
+        y = 230
+        for idx, line in enumerate(hook_lines[:2]):
+            fill_color = "#FDE047" if idx == 1 else "#F8FAFC"
+            draw.text((70, y), line, font=self._get_font(60, bold=True), fill=fill_color)
+            y += 82
+
+        # Center: Product Showcase Card
+        card_box = (70, 440, 1010, 1380)
+        draw.rounded_rectangle(card_box, radius=28, fill="#131B2E", outline="#1E293B", width=2)
+        if prod_img:
+            p_copy = prod_img.copy()
+            p_copy.thumbnail((780, 780), Image.Resampling.LANCZOS)
+            px = 70 + (940 - p_copy.width) // 2
+            py = 440 + (940 - p_copy.height) // 2
+            canvas.paste(p_copy, (px, py), p_copy if p_copy.mode == "RGBA" else None)
+
+        # Bottom Feature Pill
+        draw.rounded_rectangle((70, 1420, 1010, 1640), radius=20, fill="#1E293B", outline="#334155", width=2)
+        draw.text((110, 1460), f"✓ {product.title[:24]}", font=self._get_font(42, bold=True), fill="#F8FAFC")
+        draw.text((110, 1540), f"{product.price:,}원  |  ⚡ 로켓배송  |  ★ {product.rating}점", font=self._get_font(36, bold=True), fill="#38BDF8")
+
+        # Bottom CTA Banner
+        draw.rounded_rectangle((70, 1680, 1010, 1780), radius=16, fill="#2563EB")
+        draw.text((120, 1705), f"👉 구매처: 프로필 링크 쇼룸 [#{item_num}번] 확인!", font=self._get_font(36, bold=True), fill="#FFFFFF")
+
+        canvas.save(out_path, quality=95)
+        return out_path
+
+    def _render_scene_2(self, product: Product, item_num: int, script_pkg: Dict[str, Any], prod_img: Optional[Image.Image]) -> Path:
+        """Scene 2: 4~10s Real Value, Price & Social Proof."""
+        canvas, draw = self._create_base_canvas()
+        out_path = VIDEOS_DIR / f"{product.product_id}_sc2.png"
+
+        # Top Header
+        draw.text((70, 110), f"⚡ #{item_num}번 상품 실사용 포인트", font=self._get_font(40, bold=True), fill="#38BDF8")
+        draw.text((70, 175), "실제 써보고 놀란 이유", font=self._get_font(62, bold=True), fill="#F8FAFC")
+
+        # Upper Product Mini Preview with Big Price
+        draw.rounded_rectangle((70, 280, 1010, 620), radius=24, fill="#131B2E", outline="#2563EB", width=2)
+        if prod_img:
+            p_mini = prod_img.copy()
+            p_mini.thumbnail((300, 300), Image.Resampling.LANCZOS)
+            canvas.paste(p_mini, (100, 300), p_mini if p_mini.mode == "RGBA" else None)
+
+        draw.text((430, 340), f"{product.price:,}원", font=self._get_font(64, bold=True), fill="#FBBF24")
+        draw.rounded_rectangle((430, 440, 620, 495), radius=10, fill="#14532D")
+        draw.text((450, 452), "⚡ 로켓배송", font=self._get_font(28, bold=True), fill="#4ADE80")
+        draw.text((430, 525), f"평점 ★ {product.rating} ({product.review_count:,}개 리뷰)", font=self._get_font(32), fill="#94A3B8")
+
+        # 3 Key Value Cards
+        points = [
+            ("가성비 & 부담 제로", f"{product.price:,}원대로 삶의 질 즉시 업그레이드"),
+            ("실사용 압도적 호평", f"누적 리뷰 {product.review_count:,}개 검증 완료"),
+            ("빠른 수령", "로켓배송으로 주문 시 내일 바로 도착")
+        ]
+        y_pos = 660
+        for title, desc in points:
+            draw.rounded_rectangle((70, y_pos, 1010, y_pos + 180), radius=20, fill="#1E293B", outline="#334155", width=2)
+            draw.text((110, y_pos + 30), f"• {title}", font=self._get_font(42, bold=True), fill="#FDE047")
+            draw.text((110, y_pos + 95), desc, font=self._get_font(34), fill="#CBD5E1")
+            y_pos += 210
+
+        # Subtitle Callout
+        sub_text = script_pkg.get("sub_2", f"{product.title[:20]}")
+        draw.rounded_rectangle((70, 1340, 1010, 1460), radius=18, fill="#0F172A", outline="#38BDF8", width=2)
+        draw.text((110, 1375), f"💡 {sub_text}", font=self._get_font(38, bold=True), fill="#38BDF8")
+
+        # Bottom Bar
+        draw.rounded_rectangle((70, 1680, 1010, 1780), radius=16, fill="#2563EB")
+        draw.text((120, 1705), f"👉 구매처: 프로필 링크 쇼룸 [#{item_num}번] 확인!", font=self._get_font(36, bold=True), fill="#FFFFFF")
+
+        canvas.save(out_path, quality=95)
+        return out_path
+
+    def _render_scene_3(self, product: Product, item_num: int, script_pkg: Dict[str, Any]) -> Path:
+        """Scene 3: 10~15s Action CTA & Showroom Navigation."""
+        canvas, draw = self._create_base_canvas()
+        out_path = VIDEOS_DIR / f"{product.product_id}_sc3.png"
+
+        # Big Vibrant CTA Container
+        cta_box = (70, 240, 1010, 1280)
+        draw.rounded_rectangle(cta_box, radius=32, fill="#E11D48")
+
+        draw.text((120, 320), "📌 구매 링크는 어디에 있나요?", font=self._get_font(52, bold=True), fill="#FFFFFF")
+
+        # Step 1
+        draw.rounded_rectangle((110, 440, 970, 640), radius=20, fill="#991B1B")
+        draw.text((150, 480), "1단계: 채널 홈(프로필) 상단 링크 클릭", font=self._get_font(40, bold=True), fill="#F8FAFC")
+        draw.text((150, 550), "유튜브 프로필 링크 누르면 쇼룸 웹페이지 연결!", font=self._get_font(30), fill="#FDE047")
+
+        # Step 2
+        draw.rounded_rectangle((110, 680, 970, 880), radius=20, fill="#991B1B")
+        draw.text((150, 720), f"2단계: 쇼룸에서 [#{item_num}번 상품] 버튼 클릭", font=self._get_font(40, bold=True), fill="#FDE047")
+        draw.text((150, 790), "영상 번호와 동일한 번호 누르면 1초 만에 끝!", font=self._get_font(30), fill="#F8FAFC")
+
+        # Step 3
+        draw.rounded_rectangle((110, 920, 970, 1120), radius=20, fill="#991B1B")
+        draw.text((150, 960), "3단계: 쿠팡 최저가 & 로켓배송 바로 이동", font=self._get_font(40, bold=True), fill="#F8FAFC")
+        draw.text((150, 1030), f"{product.price:,}원 최저가 혜택 바로 확인 가능", font=self._get_font(30), fill="#FDE047")
+
+        # Arrow Guide
+        draw.text((220, 1380), "👇 지금 바로 프로필 링크 클릭! 👇", font=self._get_font(46, bold=True), fill="#38BDF8")
+
+        # Giant Bottom Button
+        draw.rounded_rectangle((70, 1520, 1010, 1680), radius=24, fill="#2563EB")
+        draw.text((160, 1570), f"👉 프로필 쇼룸 [#{item_num}번] 바로가기", font=self._get_font(46, bold=True), fill="#FFFFFF")
+
+        canvas.save(out_path, quality=95)
+        return out_path
+
     def generate_short(self, product: Product, item_num: int = 1) -> Dict[str, Any]:
         """
-        Orchestrates full Shorts generation:
-        1. Script -> 2. AI Voiceover (Edge-TTS) -> 3. Pillow Frames -> 4. FFmpeg Video
+        Orchestrates full High-Quality Shorts generation:
+        1. Custom AI Script -> 2. Voiceover (TTS/Voice Cloning) -> 3. 3-Scene Visuals -> 4. FFmpeg Video
         """
-        save_log("INFO", "shorts", f"Generating 15s Shorts video for #{item_num} {product.title}...")
+        save_log("INFO", "shorts", f"Generating dynamic High-Quality Shorts for #{item_num} {product.title}...")
 
-        # Script
-        script_text = (
-            f"싱크대 배수구 청소할 때 칫솔 들고 문지르지 마세요. "
-            f"{product.title[:15]} 뿌리기만 하면 찌든 물때가 3초 만에 싹 내려갑니다. "
-            f"자세한 구매 링크는 채널 프로필 쇼룸 {item_num}번 상품에서 확인하세요!"
-        ) if "클리너" in product.title or "청소" in product.title else (
-            f"지저분한 충전선 볼 때마다 은근히 신경 쓰이셨죠? "
-            f"{product.title[:15]} 붙여놓으면 근처만 가도 착 달라붙어서 1초 만에 정리 끝납니다. "
-            f"제품 정보는 채널 프로필 쇼룸 {item_num}번 상품에서 바로 확인하세요!"
+        # 1. Custom Script
+        script_pkg = self.script_writer.generate_script(product, item_num)
+        narration_text = script_pkg["narration"]
+
+        # 2. Voiceover (Voice Cloning or High-Quality Edge Neural Voice)
+        audio_path = VIDEOS_DIR / f"{product.product_id}_voice.mp3"
+        self.tts.generate_audio(narration_text, str(audio_path))
+        duration = self._get_audio_duration(str(audio_path))
+        duration = max(11.0, duration)
+
+        # 3. Dynamic 3-Scene Visual Frames
+        prod_img = self._load_product_image(product.image_url)
+        sc1_path = self._render_scene_1(product, item_num, script_pkg, prod_img)
+        sc2_path = self._render_scene_2(product, item_num, script_pkg, prod_img)
+        sc3_path = self._render_scene_3(product, item_num, script_pkg)
+
+        # Scene Durations (30% hook, 40% proof, 30% cta)
+        d1 = round(duration * 0.30, 2)
+        d2 = round(duration * 0.40, 2)
+        d3 = round(duration - d1 - d2 + 0.5, 2)
+
+        # 4. Stitch with High-Bitrate H.264 & Animated Red Progress Bar
+        output_mp4 = VIDEOS_DIR / f"{product.product_id}_shorts.mp4"
+
+        # FFmpeg filter: concat 3 scenes + animated bottom progress bar
+        filter_str = (
+            f"[0:v][1:v][2:v]concat=n=3:v=1:a=0[vcat];"
+            f"[vcat]drawbox=x=0:y=1904:w=iw*t/{duration:.2f}:h=16:color=#E11D48:t=fill[vout]"
         )
 
-        hook_text = "이거 쓰고 살림 피로도\n절반으로 줄었습니다" if "클리너" in product.title else "데스크 정리 끝판왕\n1초 만에 깔끔해집니다"
-
-        # 1. Voiceover
-        audio_path = VIDEOS_DIR / f"{product.product_id}_voice.mp3"
-        self._run_coroutine(self._generate_voiceover(script_text, str(audio_path)))
-        duration = self._get_audio_duration(str(audio_path))
-        half_dur = max(3.0, duration / 2.0)
-
-        # 2. Render Frames
-        f1_path, f2_path = self._render_frames(product, item_num, hook_text)
-
-        # 3. Stitch Video with FFmpeg
-        output_mp4 = VIDEOS_DIR / f"{product.product_id}_shorts.mp4"
         cmd = [
             self.ffmpeg_exe,
-            "-loop", "1", "-t", str(half_dur), "-i", str(f1_path),
-            "-loop", "1", "-t", str(half_dur + 0.5), "-i", str(f2_path),
+            "-loop", "1", "-t", str(d1), "-i", str(sc1_path),
+            "-loop", "1", "-t", str(d2), "-i", str(sc2_path),
+            "-loop", "1", "-t", str(d3), "-i", str(sc3_path),
             "-i", str(audio_path),
-            "-filter_complex", "[0:v][1:v]concat=n=2:v=1:a=0[v]",
-            "-map", "[v]", "-map", "2:a",
-            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-r", "30",
-            "-c:a", "aac", "-shortest",
+            "-filter_complex", filter_str,
+            "-map", "[vout]", "-map", "3:a",
+            "-c:v", "libx264", "-crf", "18", "-preset", "fast",
+            "-pix_fmt", "yuv420p", "-r", "30",
+            "-c:a", "aac", "-b:a", "192k", "-shortest",
             "-y", str(output_mp4)
         ]
 
@@ -205,19 +262,19 @@ class ShortsGenerator:
             save_log("ERROR", "shorts", f"FFmpeg video export failed: {res.stderr[:200]}")
             return {"success": False, "error": res.stderr}
 
-        save_log("INFO", "shorts", f"Shorts video exported successfully: {output_mp4.name} ({duration:.1f}s)")
+        save_log("INFO", "shorts", f"High-Quality Shorts video exported: {output_mp4.name} ({duration:.1f}s)")
 
-        # YouTube Metadata Pack
+        # YouTube Metadata
         from modules.showroom.builder import ShowroomBuilder
         showroom_url = ShowroomBuilder.get_showroom_url()
-        yt_title = f"[#{item_num}] 실제 써보고 놀란 이유! {product.title[:20]} 솔직후기 #shorts"
+        yt_title = f"[#{item_num}] {script_pkg.get('sub_1', product.title[:15])}! {product.title[:18]} 솔직후기 #shorts"
         yt_desc = (
-            f"영상 속 제품 구매처는 채널 프로필 상단 링크 쇼룸 [#{item_num}번 상품]을 클릭하세요!\n"
-            f"👉 모바일 쇼룸 주소: {showroom_url}\n\n"
-            f"• 상품명: {product.title}\n"
+            f"{script_pkg.get('narration')}\n\n"
+            f"👉 모바일 쇼룸 주소: {showroom_url}\n"
+            f"• 제품 번호: #{item_num}번 상품\n"
             f"• 가격: {product.price:,}원 (로켓배송)\n\n"
             f"이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.\n\n"
-            f"#쇼츠 #쿠팡 #살림꿀템 #자취템 #내돈내산"
+            f"#쇼츠 #쿠팡 #살림꿀템 #자취템 #내돈내산 #{product.category}"
         )
         tags = ["쇼츠", "쿠팡", "살림꿀템", "자취템", "내돈내산", product.category]
 
@@ -230,5 +287,6 @@ class ShortsGenerator:
             "description": yt_desc,
             "tags": tags,
             "item_number": item_num,
-            "product": product.title
+            "product": product.title,
+            "script": script_pkg
         }

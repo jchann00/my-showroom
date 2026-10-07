@@ -499,6 +499,59 @@
                 </div>
               </div>
 
+              <!-- Voiceover & Voice Cloning (내 목소리 복제) Section -->
+              <div class="form-group full-width" style="grid-column: span 2; background: rgba(14, 165, 233, 0.05); border: 1px solid rgba(14, 165, 233, 0.25); border-radius: 12px; padding: 16px; margin-top: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <span style="font-weight: 700; color: #38BDF8; font-size: 14.5px;">🎤 AI 목소리 & 보이스 클로닝(내 목소리 영구 복제) 설정</span>
+                  <span style="background: rgba(14, 165, 233, 0.15); color: #38BDF8; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600;">ElevenLabs / Edge-TTS</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                  <div>
+                    <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block;">사용할 음성 엔진 (Provider)</label>
+                    <select class="form-control" id="cfg-tts-provider">
+                      <option value="edge_tts">Edge-TTS (무료 고품질 한국어 신경망 보이스)</option>
+                      <option value="elevenlabs">ElevenLabs (내 목소리 샘플 복제 - Voice Cloning)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block;">한국어 기본 신경망 목소리 선택</label>
+                    <select class="form-control" id="cfg-tts-voice">
+                      <option value="ko-KR-InJoonNeural">인준 (InJoon) - 신뢰감 있고 부드러운 2030 남성 리뷰어 보이스 (추천)</option>
+                      <option value="ko-KR-SunHiNeural">선희 (SunHi) - 또렷하고 전문적인 여성 아나운서 보이스</option>
+                      <option value="ko-KR-HyunsuMultilingualNeural">현수 (Hyunsu) - 밝고 트렌디한 청년 보이스</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block;">나레이션 말하기 속도 (숏츠 템포)</label>
+                    <select class="form-control" id="cfg-tts-speed">
+                      <option value="+15%">+15% 빠른 템포 (쇼츠 영상 최적 이탈률 방지 - 권장)</option>
+                      <option value="+10%">+10% 경쾌한 템포</option>
+                      <option value="+0%">기본 속도 (보통)</option>
+                      <option value="+20%">+20% 초고속 템포</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block;">ElevenLabs API Key (보이스 클로닝용)</label>
+                    <input type="password" class="form-control" id="cfg-elevenlabs-key" placeholder="ElevenLabs API Key 입력">
+                  </div>
+
+                  <div style="grid-column: span 2;">
+                    <label style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px; display: block;">내 복제 목소리 Voice ID (Voice Cloning ID)</label>
+                    <input type="text" class="form-control" id="cfg-elevenlabs-voice-id" placeholder="예: 21m00Tcm4TlvDq8ikWAM (ElevenLabs VoiceLab에서 복사한 Voice ID)">
+                  </div>
+                </div>
+
+                <div style="font-size: 11.5px; color: #94A3B8; margin-top: 10px; line-height: 1.6; background: rgba(0,0,0,0.25); padding: 10px 12px; border-radius: 8px;">
+                  🎙️ <strong>내 목소리로 100% 동일하게 말하게 만드는 법 (초간단 3단계):</strong><br>
+                  1. <a href="https://elevenlabs.io" target="_blank" style="color: #38BDF8; text-decoration: underline;">ElevenLabs.io</a> 가입 후 <strong>VoiceLab &gt; Add Voice &gt; Instant Voice Clone</strong> 클릭<br>
+                  2. 스마트폰 음성녹음기로 조용한 방에서 내 목소리를 <strong>30초~1분</strong> 녹음한 파일(mp3/m4a) 업로드<br>
+                  3. 생성된 Voice의 <strong>Voice ID</strong>와 <strong>API Key</strong>를 위 입력칸에 넣고 [설정 저장]을 누르면, 모든 영상이 <strong>내 목소리로 자동 나레이션</strong>됩니다!
+                </div>
+              </div>
+
               <!-- Threads & Meta Section -->
               <div class="form-group">
                 <label>Threads User ID (선택)</label>
