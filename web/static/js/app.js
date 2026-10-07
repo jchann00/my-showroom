@@ -166,8 +166,57 @@ document.addEventListener("DOMContentLoaded", () => {
           <div style="color: #E2E8F0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
             ${(p.product_title || p.main_text || '').substring(0, 40)}...
           </div>
+          ${p.post_type === 'shorts' ? `
+            <div style="margin-top: 8px; display: flex; gap: 8px;">
+              <button class="btn btn-secondary" onclick="document.querySelector('[data-tab=videos]').click()" style="font-size: 11px; padding: 4px 8px;">
+                <i class="ri-play-circle-line"></i> 영상 보러가기
+              </button>
+              <button class="btn btn-primary" onclick="document.querySelector('[data-tab=showroom]').click()" style="font-size: 11px; padding: 4px 8px; background: #0284C7;">
+                <i class="ri-store-2-line"></i> 쇼룸 카탈로그 보기
+              </button>
+            </div>
+          ` : ''}
         </div>
       `).join("");
+
+      // Update Spotlight Card with latest video
+      try {
+        const vRes = await fetch("/api/videos");
+        const videos = await vRes.json();
+        if (videos && videos.length > 0) {
+          const latestVideo = videos[0];
+          const vidPlayer = document.getElementById("spotlight-video");
+          const vidTitle = document.getElementById("spotlight-title");
+          const vidMeta = document.getElementById("spotlight-meta");
+          const vidYtTitle = document.getElementById("spotlight-yt-title");
+          const vidYtDesc = document.getElementById("spotlight-yt-desc");
+          const dlBtn = document.getElementById("spotlight-download-btn");
+
+          if (vidPlayer && !vidPlayer.src.includes(latestVideo.filename)) {
+            vidPlayer.src = latestVideo.url;
+          }
+          if (vidTitle) vidTitle.textContent = latestVideo.filename;
+          if (vidMeta) vidMeta.textContent = `💾 ${latestVideo.size_mb} MB · 🕒 ${latestVideo.created_at || '방금 전'}`;
+          if (dlBtn) {
+            dlBtn.href = latestVideo.url;
+            dlBtn.download = latestVideo.filename;
+          }
+
+          const latestShortPost = posts.find(p => p.post_type === 'shorts');
+          if (latestShortPost) {
+            if (vidTitle && latestShortPost.product_title) {
+              vidTitle.textContent = latestShortPost.product_title;
+            }
+            if (vidYtTitle) vidYtTitle.textContent = latestShortPost.main_text || `[추천] ${latestShortPost.product_title} 솔직후기 #shorts`;
+            if (vidYtDesc) vidYtDesc.textContent = latestShortPost.comment_1 || "프로필 쇼룸 링크에서 최저가 확인하세요!\n#shorts #쿠팡 #살림꿀템";
+          } else {
+            if (vidYtTitle) vidYtTitle.textContent = `[추천] ${latestVideo.filename.replace('_shorts.mp4', '')} 솔직후기 #shorts`;
+            if (vidYtDesc) vidYtDesc.textContent = "프로필 쇼룸 링크에서 최저가 확인하세요!\n#shorts #쿠팡 #살림꿀템";
+          }
+        }
+      } catch (err) {
+        console.error("Failed to update spotlight:", err);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -464,6 +513,23 @@ document.addEventListener("DOMContentLoaded", () => {
           showToast("📋 쇼룸 주소가 복사되었습니다!");
         });
       }
+    });
+  }
+
+  // Action: Copy Spotlight YouTube Title & Description
+  const btnCopySpotTitle = document.getElementById("btn-copy-spotlight-title");
+  if (btnCopySpotTitle) {
+    btnCopySpotTitle.addEventListener("click", () => {
+      const text = document.getElementById("spotlight-yt-title")?.textContent || "";
+      navigator.clipboard.writeText(text).then(() => showToast("📋 유튜브 제목이 복사되었습니다!"));
+    });
+  }
+
+  const btnCopySpotDesc = document.getElementById("btn-copy-spotlight-desc");
+  if (btnCopySpotDesc) {
+    btnCopySpotDesc.addEventListener("click", () => {
+      const text = document.getElementById("spotlight-yt-desc")?.textContent || "";
+      navigator.clipboard.writeText(text).then(() => showToast("📋 유튜브 설명/해시태그가 복사되었습니다!"));
     });
   }
 
