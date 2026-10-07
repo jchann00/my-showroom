@@ -48,9 +48,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const statusText = document.getElementById("system-status-text");
       const toggleBtn = document.getElementById("btn-toggle-scheduler");
 
+      const isShorts = data.config?.modules?.shorts_enabled ?? true;
+      const isThreads = data.config?.modules?.threads_enabled ?? false;
+
       if (data.is_running) {
         if (dot) dot.className = "status-dot";
-        if (statusText) statusText.textContent = "오토파일럿 가동 중 (24/7 무인 자동화)";
+        if (isShorts && !isThreads) {
+          if (statusText) statusText.innerHTML = '오토파일럿 가동 중 (<strong style="color: #38BDF8;">🎬 숏츠 전용</strong> · <span style="color: #94A3B8;">🧵 쓰레드 OFF</span>)';
+        } else if (isShorts && isThreads) {
+          if (statusText) statusText.innerHTML = '오토파일럿 가동 중 (<strong style="color: #38BDF8;">🎬 숏츠</strong> & <strong style="color: #818CF8;">🧵 쓰레드</strong>)';
+        } else if (!isShorts && isThreads) {
+          if (statusText) statusText.innerHTML = '오토파일럿 가동 중 (<strong style="color: #818CF8;">🧵 쓰레드 전용</strong>)';
+        } else {
+          if (statusText) statusText.textContent = "오토파일럿 대기 중 (모듈 꺼짐)";
+        }
         if (toggleBtn) toggleBtn.innerHTML = '<i class="ri-pause-line"></i> 일시정지';
       } else {
         if (dot) dot.className = "status-dot paused";

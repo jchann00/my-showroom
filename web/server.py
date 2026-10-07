@@ -67,7 +67,7 @@ async def serve_showroom():
 
 
 @app.post("/api/trigger/shorts")
-async def trigger_shorts():
+def trigger_shorts():
     try:
         res = scheduler_instance.trigger_shorts_cycle()
         return {"success": True, "data": res}
@@ -77,7 +77,7 @@ async def trigger_shorts():
 
 
 @app.post("/api/trigger/threads")
-async def trigger_threads():
+def trigger_threads():
     try:
         res = scheduler_instance.trigger_one_post(force_affiliate=True)
         return {"success": True, "data": res}
@@ -113,7 +113,7 @@ async def get_system_status():
 
 
 @app.post("/api/trigger")
-async def trigger_manual_post(req: TriggerRequest):
+def trigger_manual_post(req: TriggerRequest):
     try:
         res = scheduler_instance.trigger_one_post(force_affiliate=req.force_affiliate)
         return {"success": True, "data": res}

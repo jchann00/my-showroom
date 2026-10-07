@@ -36,6 +36,20 @@ class ShortsGenerator:
         except Exception:
             return ImageFont.load_default()
 
+    def _run_coroutine(self, coro):
+        """Runs an async coroutine safely, even if called inside an active event loop."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            loop = None
+
+        if loop and loop.is_running():
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+                return pool.submit(asyncio.run, coro).result()
+        else:
+            return asyncio.run(coro)
+
     async def _generate_voiceover(self, text: str, output_path: str):
         """Generates natural Korean voiceover using Edge TTS neural model."""
         communicate = edge_tts.Communicate(text, "ko-KR-SunHiNeural")
@@ -165,7 +179,7 @@ class ShortsGenerator:
 
         # 1. Voiceover
         audio_path = VIDEOS_DIR / f"{product.product_id}_voice.mp3"
-        asyncio.run(self._generate_voiceover(script_text, str(audio_path)))
+        self._run_coroutine(self._generate_voiceover(script_text, str(audio_path)))
         duration = self._get_audio_duration(str(audio_path))
         half_dur = max(3.0, duration / 2.0)
 
