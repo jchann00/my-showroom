@@ -32,9 +32,16 @@ def init_db():
             deeplink TEXT,
             created_at TEXT NOT NULL,
             posted_at TEXT,
-            status TEXT DEFAULT 'pending'
+            status TEXT DEFAULT 'pending',
+            showroom_num INTEGER
         )
     """)
+
+    # Ensure showroom_num column exists on existing databases
+    try:
+        cursor.execute("ALTER TABLE products ADD COLUMN showroom_num INTEGER")
+    except Exception:
+        pass
 
     # Posts history table
     cursor.execute("""
@@ -98,20 +105,24 @@ def is_product_exists(product_id: str) -> bool:
 
 
 def save_product(product: Product) -> bool:
-    """Save or update product."""
+    """Save or update product with automatic showroom_num assignment."""
     conn = get_connection()
     cursor = conn.cursor()
     try:
+        if product.showroom_num is None:
+            cursor.execute("SELECT COALESCE(MAX(showroom_num), 0) + 1 FROM products")
+            product.showroom_num = cursor.fetchone()[0]
+
         cursor.execute("""
             INSERT OR REPLACE INTO products (
                 product_id, title, price, rating, review_count, is_rocket,
-                category, original_url, image_url, deeplink, created_at, posted_at, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                category, original_url, image_url, deeplink, created_at, posted_at, status, showroom_num
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             product.product_id, product.title, product.price, product.rating,
             product.review_count, 1 if product.is_rocket else 0, product.category,
             product.original_url, product.image_url, product.deeplink,
-            product.created_at, product.posted_at, product.status
+            product.created_at, product.posted_at, product.status, product.showroom_num
         ))
         conn.commit()
         return True
@@ -130,13 +141,13 @@ def get_pending_product(category: Optional[str] = None) -> Optional[Product]:
         cursor.execute("""
             SELECT * FROM products 
             WHERE status = 'pending' AND category = ?
-            ORDER BY created_at DESC LIMIT 1
+            ORDER BY showroom_num ASC LIMIT 1
         """, (category,))
     else:
         cursor.execute("""
             SELECT * FROM products 
             WHERE status = 'pending' 
-            ORDER BY created_at DESC LIMIT 1
+            ORDER BY showroom_num ASC LIMIT 1
         """)
     row = cursor.fetchone()
     conn.close()
@@ -156,6 +167,7 @@ def get_pending_product(category: Optional[str] = None) -> Optional[Product]:
         created_at=row["created_at"],
         posted_at=row["posted_at"],
         status=row["status"],
+        showroom_num=row["showroom_num"] if "showroom_num" in row.keys() else None,
     )
 
 
@@ -204,14 +216,35 @@ def get_recent_posts(limit: int = 20) -> List[Dict[str, Any]]:
     return [dict(row) for row in rows]
 
 
-def get_recent_products(limit: int = 20) -> List[Dict[str, Any]]:
-    """Get recent sourced products."""
+def get_recent_products(limit: int = 100) -> List[Dict[str, Any]]:
+    """Get recent sourced products ordered by showroom_num."""
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM products ORDER BY created_at DESC LIMIT ?", (limit,))
+    cursor.execute("""
+        SELECT * FROM products 
+        ORDER BY 
+          CASE WHEN showroom_num IS NOT NULL THEN showroom_num ELSE 999999 END ASC,
+          created_at DESC 
+        LIMIT ?
+    """, (limit,))
     rows = cursor.fetchall()
     conn.close()
     return [dict(row) for row in rows]
+
+
+def update_product_link(product_id: str, new_link: str) -> bool:
+    """Updates a product's affiliate/landing link directly."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE products SET deeplink = ? WHERE product_id = ?", (new_link.strip(), product_id))
+        conn.commit()
+        return True
+    except Exception as e:
+        save_log("ERROR", "db", f"Failed to update link for {product_id}: {e}")
+        return False
+    finally:
+        conn.close()
 
 
 def get_recent_logs(limit: int = 50) -> List[Dict[str, Any]]:

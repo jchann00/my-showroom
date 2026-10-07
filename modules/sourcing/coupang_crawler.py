@@ -19,7 +19,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 3420,
             "is_rocket": True,
             "category": "생활용품",
-            "original_url": "https://www.coupang.com/vp/products/701239101",
+            "original_url": "https://www.coupang.com/np/search?q=홈스타+배수구+클리너",
             "image_url": "https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=800"
         },
         {
@@ -30,7 +30,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 1890,
             "is_rocket": True,
             "category": "생활용품",
-            "original_url": "https://www.coupang.com/vp/products/701239102",
+            "original_url": "https://www.coupang.com/np/search?q=워셔블+실리콘+먼지롤러+돌돌이",
             "image_url": "https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=800"
         },
         {
@@ -41,7 +41,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 2150,
             "is_rocket": True,
             "category": "생활용품",
-            "original_url": "https://www.coupang.com/vp/products/701239103",
+            "original_url": "https://www.coupang.com/np/search?q=무타공+압축봉+4단+세트",
             "image_url": "https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800"
         },
         {
@@ -52,7 +52,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 5210,
             "is_rocket": True,
             "category": "생활용품",
-            "original_url": "https://www.coupang.com/vp/products/701239104",
+            "original_url": "https://www.coupang.com/np/search?q=360도+초미세+안개분사+분무기",
             "image_url": "https://images.unsplash.com/photo-1608248597359-0f04e84b72c9?w=800"
         }
     ],
@@ -65,7 +65,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 2840,
             "is_rocket": True,
             "category": "아이디어",
-            "original_url": "https://www.coupang.com/vp/products/702349201",
+            "original_url": "https://www.coupang.com/np/search?q=데스크용+마그네틱+자석+케이블+홀더",
             "image_url": "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=800"
         },
         {
@@ -76,7 +76,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 4120,
             "is_rocket": True,
             "category": "아이디어",
-            "original_url": "https://www.coupang.com/vp/products/702349202",
+            "original_url": "https://www.coupang.com/np/search?q=360도+회전+노트북+태블릿+거치대",
             "image_url": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800"
         },
         {
@@ -87,7 +87,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 1430,
             "is_rocket": True,
             "category": "아이디어",
-            "original_url": "https://www.coupang.com/vp/products/702349203",
+            "original_url": "https://www.coupang.com/np/search?q=원터치+미니+전동+압축기+압축팩",
             "image_url": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800"
         }
     ],
@@ -100,7 +100,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 3190,
             "is_rocket": True,
             "category": "펫상품",
-            "original_url": "https://www.coupang.com/vp/products/703459301",
+            "original_url": "https://www.coupang.com/np/search?q=반려동물+실리콘+마사지+브러시+빗",
             "image_url": "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800"
         },
         {
@@ -111,7 +111,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 1620,
             "is_rocket": True,
             "category": "펫상품",
-            "original_url": "https://www.coupang.com/vp/products/703459302",
+            "original_url": "https://www.coupang.com/np/search?q=강아지+노즈워크+잔디매트",
             "image_url": "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800"
         },
         {
@@ -122,7 +122,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 2750,
             "is_rocket": True,
             "category": "펫상품",
-            "original_url": "https://www.coupang.com/vp/products/703459303",
+            "original_url": "https://www.coupang.com/np/search?q=반려동물+자동정수기+활성탄+필터",
             "image_url": "https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=800"
         }
     ],
@@ -135,7 +135,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 4890,
             "is_rocket": True,
             "category": "다이어트",
-            "original_url": "https://www.coupang.com/vp/products/704569401",
+            "original_url": "https://www.coupang.com/np/search?q=마이노멀+알룰로스+저당+데리야끼+소스",
             "image_url": "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800"
         },
         {
@@ -146,7 +146,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 3410,
             "is_rocket": True,
             "category": "다이어트",
-            "original_url": "https://www.coupang.com/vp/products/704569402",
+            "original_url": "https://www.coupang.com/np/search?q=단백질+쉐이커+믹싱볼+보틀",
             "image_url": "https://images.unsplash.com/photo-1544816155-12df9643f363?w=800"
         },
         {
@@ -157,7 +157,7 @@ CATEGORY_SEEDS: Dict[str, List[Dict[str, Any]]] = {
             "review_count": 2100,
             "is_rocket": True,
             "category": "다이어트",
-            "original_url": "https://www.coupang.com/vp/products/704569403",
+            "original_url": "https://www.coupang.com/np/search?q=글루텐프리+곤약+쫀드기",
             "image_url": "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800"
         }
     ]

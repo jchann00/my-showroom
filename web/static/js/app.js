@@ -391,21 +391,68 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!tbody) return;
 
       if (!products || products.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">적재된 상품이 없습니다. 버튼을 누르면 자동으로 수집됩니다.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">적재된 상품이 없습니다. 버튼을 누르면 자동으로 수집됩니다.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = products.map(p => `
+      tbody.innerHTML = products.map(p => {
+        const linkDisplay = p.deeplink 
+          ? `<a href="${p.deeplink}" target="_blank" rel="noopener noreferrer" style="color: #38BDF8; font-size: 12px; text-decoration: underline; display: inline-flex; align-items: center; gap: 4px;">
+               <i class="ri-external-link-line"></i> ${p.deeplink.includes('np/search') ? '쿠팡 검색결과 열기' : '파트너스 링크 열기'}
+             </a>`
+          : '<span style="color: var(--text-muted); font-size: 12px;">대기중</span>';
+
+        return `
         <tr>
+          <td><strong style="color: #F43F5E; font-size: 14px;">#${p.showroom_num || '-'}</strong></td>
           <td><span style="background: rgba(99,102,241,0.2); color: #818CF8; padding: 2px 8px; border-radius: 4px; font-weight: 600;">${p.category}</span></td>
-          <td style="max-width: 260px; font-weight: 500;">${p.title}</td>
+          <td style="max-width: 240px; font-weight: 500;">${p.title}</td>
           <td style="color: #38BDF8; font-weight: 600;">${p.price.toLocaleString()}원</td>
           <td>★ ${p.rating} (${p.review_count.toLocaleString()})</td>
           <td>${p.is_rocket ? '<span style="color: #4ADE80; font-weight: 600;">✓ 로켓배송</span>' : '일반'}</td>
-          <td style="font-size: 11px; color: var(--text-muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis;">${p.deeplink || '자동생성 대기'}</td>
-          <td><span class="status-badge ${p.status}">${p.status === 'posted' ? '발행완료' : '대기중'}</span></td>
+          <td>${linkDisplay}</td>
+          <td>
+            <button class="btn btn-secondary btn-edit-link" 
+                    data-id="${p.product_id}" 
+                    data-title="${encodeURIComponent(p.title)}" 
+                    data-link="${encodeURIComponent(p.deeplink || '')}" 
+                    style="font-size: 11px; padding: 4px 8px;">
+              <i class="ri-edit-line"></i> 링크 수정
+            </button>
+          </td>
         </tr>
-      `).join("");
+      `;
+      }).join("");
+
+      // Bind edit link buttons
+      tbody.querySelectorAll(".btn-edit-link").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const pid = btn.dataset.id;
+          const ptitle = decodeURIComponent(btn.dataset.title);
+          const currentLink = decodeURIComponent(btn.dataset.link);
+          const newLink = prompt(`[${ptitle}]\n\n이 상품에 적용할 쿠팡 파트너스 링크 또는 쿠팡 상품 URL을 입력하세요:\n(미입력 시 쿠팡 검색결과로 자동 연결됩니다)`, currentLink);
+          if (newLink !== null && newLink.trim()) {
+            try {
+              const uRes = await fetch("/api/products/update-link", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ product_id: pid, new_link: newLink.trim() })
+              });
+              const uData = await uRes.json();
+              if (uData.success) {
+                showToast("✅ " + uData.message);
+                loadProducts();
+                const iframe = document.getElementById("showroom-iframe");
+                if (iframe) iframe.src = "/showroom?t=" + Date.now();
+              } else {
+                showToast("⚠️ " + (uData.error || "수정 실패"));
+              }
+            } catch (err) {
+              showToast("오류: " + err.message);
+            }
+          }
+        });
+      });
     } catch (e) {
       console.error(e);
     }

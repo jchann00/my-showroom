@@ -42,6 +42,11 @@ class SettingsUpdateRequest(BaseModel):
     config: Dict[str, Any]
 
 
+class ProductLinkUpdateRequest(BaseModel):
+    product_id: str
+    new_link: str
+
+
 @app.on_event("startup")
 def startup_event():
     cfg = load_config()
@@ -172,7 +177,18 @@ async def toggle_scheduler():
 
 @app.get("/api/products")
 async def get_products():
-    return get_recent_products(limit=50)
+    return get_recent_products(limit=100)
+
+
+@app.post("/api/products/update-link")
+async def update_link(req: ProductLinkUpdateRequest):
+    from database.db import update_product_link
+    from modules.showroom.builder import ShowroomBuilder
+    success = update_product_link(req.product_id, req.new_link)
+    if success:
+        ShowroomBuilder.build_showroom_html()
+        return {"success": True, "message": "상품 링크가 성공적으로 수정되었고 쇼룸에 즉시 반영되었습니다!"}
+    raise HTTPException(status_code=400, detail="링크 업데이트 실패")
 
 
 @app.get("/api/posts")

@@ -18,6 +18,7 @@ class Product:
     created_at: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     posted_at: Optional[str] = None
     status: str = "pending"  # pending, posted, rejected
+    showroom_num: Optional[int] = None
 
 
 @dataclass

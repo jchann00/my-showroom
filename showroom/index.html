@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>꿀템 아카이브 | 숏츠 속 실사용 꿀템 모음</title>
+  <title>꿀템 쇼룸 | 숏츠 영상 속 번호 맞춤 꿀템 모음</title>
   <style>
     :root {
       --bg: #0F172A;
       --card-bg: #1E293B;
       --accent: #38BDF8;
-      --btn-grad: linear-gradient(135deg, #0284C7, #2563EB);
+      --btn-grad: linear-gradient(135deg, #E11D48, #BE123C);
+      --btn-buy: linear-gradient(135deg, #0284C7, #2563EB);
       --text: #F8FAFC;
       --text-muted: #94A3B8;
     }
@@ -19,11 +20,11 @@
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Segoe UI", Roboto, sans-serif;
       line-height: 1.5;
-      padding-bottom: 60px;
+      padding-bottom: 70px;
     }
     .header {
       background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       position: sticky;
       top: 0;
       z-index: 100;
@@ -32,12 +33,15 @@
       text-align: center;
     }
     .header h1 {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 19px;
+      font-weight: 800;
       letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #38BDF8, #818CF8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
     .header p {
-      font-size: 12px;
+      font-size: 12.5px;
       color: var(--text-muted);
       margin-top: 4px;
     }
@@ -45,6 +49,40 @@
       max-width: 540px;
       margin: 0 auto;
       padding: 16px;
+    }
+    /* Quick Jump Search Box */
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 8px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .search-box input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13.5px;
+      color: #fff;
+      outline: none;
+    }
+    .search-box input:focus {
+      border-color: #38BDF8;
+    }
+    .search-box button {
+      background: var(--btn-buy);
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      padding: 0 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
     }
     .filter-bar {
       display: flex;
@@ -74,7 +112,7 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
-      margin-top: 8px;
+      margin-top: 4px;
     }
     .product-card {
       background: var(--card-bg);
@@ -84,23 +122,37 @@
       display: flex;
       position: relative;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      transition: transform 0.2s, border-color 0.3s, box-shadow 0.3s;
+    }
+    .product-card.highlight {
+      border-color: #38BDF8;
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+      transform: scale(1.02);
     }
     .card-badge {
       position: absolute;
       top: 10px;
       left: 10px;
-      background: #E11D48;
-      color: #fff;
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(4px);
+      color: #E2E8F0;
       font-size: 11px;
       font-weight: 700;
       padding: 3px 8px;
       border-radius: 6px;
       z-index: 2;
     }
+    .card-badge.featured {
+      background: #E11D48;
+      border: none;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.5);
+    }
     .img-wrapper {
       width: 130px;
       min-width: 130px;
-      height: 150px;
+      height: 155px;
       background: #0B1120;
     }
     .img-wrapper img {
@@ -157,10 +209,10 @@
     .star { color: #FBBF24; }
     .btn-buy {
       margin-top: 8px;
-      background: var(--btn-grad);
+      background: var(--btn-buy);
       color: #fff;
       text-decoration: none;
-      padding: 8px 12px;
+      padding: 9px 12px;
       border-radius: 8px;
       font-size: 12.5px;
       font-weight: 700;
@@ -183,11 +235,18 @@
 </head>
 <body>
   <header class="header">
-    <h1>✨ 꿀템 아카이브</h1>
-    <p>쇼츠 영상 속 번호를 확인하고 최저가로 만나보세요!</p>
+    <h1>✨ 꿀템 쇼룸 아카이브</h1>
+    <p>쇼츠 영상 속 번호(#1, #2...)와 일치하는 상품을 확인하세요!</p>
   </header>
 
   <main class="container">
+    <!-- Quick Number Jump -->
+    <div class="search-box">
+      <input type="number" id="quick-num-input" placeholder="영상 속 상품 번호 입력 (예: 5)" min="1">
+      <button id="btn-jump-num">바로 찾기</button>
+    </div>
+
+    <!-- Category Filter Bar -->
     <div class="filter-bar">
       <button class="filter-btn active" data-filter="all">전체보기</button>
       <button class="filter-btn" data-filter="생활용품">생활용품</button>
@@ -198,8 +257,8 @@
 
     <div class="product-list" id="product-list">
       
-        <div class="product-card" data-category="생활용품">
-          <div class="card-badge">#1 영상 속 꿀템</div>
+        <div class="product-card" id="card-1" data-num="1" data-category="생활용품">
+          <div class="card-badge featured">🔥 #1 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?w=800" alt="홈스타 찌든때 배수구 폼 클리너 500ml 2개입" loading="lazy">
           </div>
@@ -213,14 +272,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.8 (3,420개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/be3ff68d0" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%ED%99%88%EC%8A%A4%ED%83%80%20%EC%B0%8C%EB%93%A0%EB%95%8C%20%EB%B0%B0%EC%88%98%EA%B5%AC%20%ED%8F%BC%20%ED%81%B4%EB%A6%AC%EB%84%88%20500ml%202%EA%B0%9C%EC%9E%85" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-1">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="생활용품">
-          <div class="card-badge">#2 영상 속 꿀템</div>
+        <div class="product-card" id="card-2" data-num="2" data-category="생활용품">
+          <div class="card-badge featured">🔥 #2 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=800" alt="워셔블 실리콘 물세척 영구 다회용 먼지 롤러 돌돌이" loading="lazy">
           </div>
@@ -234,14 +293,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.7 (1,890개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/bfdb98674" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EC%9B%8C%EC%85%94%EB%B8%94%20%EC%8B%A4%EB%A6%AC%EC%BD%98%20%EB%AC%BC%EC%84%B8%EC%B2%99%20%EC%98%81%EA%B5%AC%20%EB%8B%A4%ED%9A%8C%EC%9A%A9%20%EB%A8%BC%EC%A7%80%20%EB%A1%A4%EB%9F%AC%20%EB%8F%8C%EB%8F%8C%EC%9D%B4" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-2">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="생활용품">
-          <div class="card-badge">#3 영상 속 꿀템</div>
+        <div class="product-card" id="card-3" data-num="3" data-category="생활용품">
+          <div class="card-badge featured">🔥 #3 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1513694203232-719a280e022f?w=800" alt="다용도 틈새 무타공 강력 지지 압축봉 4단 세트" loading="lazy">
           </div>
@@ -255,14 +314,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.6 (2,150개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/b52442c60" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EB%8B%A4%EC%9A%A9%EB%8F%84%20%ED%8B%88%EC%83%88%20%EB%AC%B4%ED%83%80%EA%B3%B5%20%EA%B0%95%EB%A0%A5%20%EC%A7%80%EC%A7%80%20%EC%95%95%EC%B6%95%EB%B4%89%204%EB%8B%A8%20%EC%84%B8%ED%8A%B8" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-3">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="생활용품">
-          <div class="card-badge">#4 영상 속 꿀템</div>
+        <div class="product-card" id="card-4" data-num="4" data-category="생활용품">
+          <div class="card-badge featured">🔥 #4 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1608248597359-0f04e84b72c9?w=800" alt="360도 연속 초미세 안개 분사 분무기 300ml 2개입" loading="lazy">
           </div>
@@ -276,14 +335,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.9 (5,210개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/bee2cebee" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=360%EB%8F%84%20%EC%97%B0%EC%86%8D%20%EC%B4%88%EB%AF%B8%EC%84%B8%20%EC%95%88%EA%B0%9C%20%EB%B6%84%EC%82%AC%20%EB%B6%84%EB%AC%B4%EA%B8%B0%20300ml%202%EA%B0%9C%EC%9E%85" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-4">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="아이디어">
-          <div class="card-badge">#5 영상 속 꿀템</div>
+        <div class="product-card" id="card-5" data-num="5" data-category="아이디어">
+          <div class="card-badge featured">🔥 #5 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=800" alt="데스크용 마그네틱 자석 케이블 홀더 선정리 클립 세트" loading="lazy">
           </div>
@@ -297,14 +356,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.8 (2,840개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/b3ed1f4bb" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EB%8D%B0%EC%8A%A4%ED%81%AC%EC%9A%A9%20%EB%A7%88%EA%B7%B8%EB%84%A4%ED%8B%B1%20%EC%9E%90%EC%84%9D%20%EC%BC%80%EC%9D%B4%EB%B8%94%20%ED%99%80%EB%8D%94%20%EC%84%A0%EC%A0%95%EB%A6%AC%20%ED%81%B4%EB%A6%BD%20%EC%84%B8%ED%8A%B8" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-5">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="아이디어">
-          <div class="card-badge">#6 영상 속 꿀템</div>
+        <div class="product-card" id="card-6" data-num="6" data-category="아이디어">
+          <div class="card-badge featured">🔥 #6 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800" alt="알루미늄 360도 회전 높이조절 접이식 노트북 태블릿 거치대" loading="lazy">
           </div>
@@ -318,14 +377,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.7 (4,120개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/bc0dee9e3" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EC%95%8C%EB%A3%A8%EB%AF%B8%EB%8A%84%20360%EB%8F%84%20%ED%9A%8C%EC%A0%84%20%EB%86%92%EC%9D%B4%EC%A1%B0%EC%A0%88%20%EC%A0%91%EC%9D%B4%EC%8B%9D%20%EB%85%B8%ED%8A%B8%EB%B6%81%20%ED%83%9C%EB%B8%94%EB%A6%BF%20%EA%B1%B0%EC%B9%98%EB%8C%80" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-6">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="아이디어">
-          <div class="card-badge">#7 영상 속 꿀템</div>
+        <div class="product-card" id="card-7" data-num="7" data-category="아이디어">
+          <div class="card-badge featured">🔥 #7 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=800" alt="옷장 공간 3배 확장 원터치 미니 전동 압축기 + 압축팩 5매" loading="lazy">
           </div>
@@ -339,14 +398,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.6 (1,430개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/hEyKNvtEFU" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EC%98%B7%EC%9E%A5%20%EA%B3%B5%EA%B0%84%203%EB%B0%B0%20%ED%99%95%EC%9E%A5%20%EC%9B%90%ED%84%B0%EC%B9%98%20%EB%AF%B8%EB%8B%88%20%EC%A0%84%EB%8F%99%20%EC%95%95%EC%B6%95%EA%B8%B0%20%2B%20%EC%95%95%EC%B6%95%ED%8C%A9%205%EB%A7%A4" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-7">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="펫상품">
-          <div class="card-badge">#8 영상 속 꿀템</div>
+        <div class="product-card" id="card-8" data-num="8" data-category="펫상품">
+          <div class="card-badge featured">🔥 #8 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800" alt="반려동물 죽은 털 싹쓸이 실리콘 마사지 브러시 빗" loading="lazy">
           </div>
@@ -360,35 +419,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.8 (3,190개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/hEyKNvtEFU" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EB%B0%98%EB%A0%A4%EB%8F%99%EB%AC%BC%20%EC%A3%BD%EC%9D%80%20%ED%84%B8%20%EC%8B%B9%EC%93%B8%EC%9D%B4%20%EC%8B%A4%EB%A6%AC%EC%BD%98%20%EB%A7%88%EC%82%AC%EC%A7%80%20%EB%B8%8C%EB%9F%AC%EC%8B%9C%20%EB%B9%97" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-8">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="펫상품">
-          <div class="card-badge">#9 영상 속 꿀템</div>
-          <div class="img-wrapper">
-            <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800" alt="강아지 분리불안 완화 스트레스 해소 킁킁 노즈워크 잔디 매트" loading="lazy">
-          </div>
-          <div class="card-content">
-            <div class="category-tag">펫상품</div>
-            <h3 class="product-title">강아지 분리불안 완화 스트레스 해소 킁킁 노즈워크 잔디 매트</h3>
-            <div class="price-row">
-              <span class="price-val">18,900원</span>
-              <span class="rocket-badge">⚡ 로켓배송</span>
-            </div>
-            <div class="review-row">
-              <span class="star">★</span> 4.7 (1,620개 리뷰)
-            </div>
-            <a href="https://link.coupang.com/a/hEyKNvtEFU" target="_blank" rel="noopener noreferrer" class="btn-buy">
-              👉 쿠팡 최저가 보러가기
-            </a>
-          </div>
-        </div>
-            
-        <div class="product-card" data-category="펫상품">
-          <div class="card-badge">#10 영상 속 꿀템</div>
+        <div class="product-card" id="card-10" data-num="10" data-category="펫상품">
+          <div class="card-badge">#10 추천 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1535268647677-300dbf3d78d1?w=800" alt="무소음 반려동물 자동 정수기 활성탄 필터 8개입 세트" loading="lazy">
           </div>
@@ -402,14 +440,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.9 (2,750개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/hEyKNvtEFU" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EB%AC%B4%EC%86%8C%EC%9D%8C%20%EB%B0%98%EB%A0%A4%EB%8F%99%EB%AC%BC%20%EC%9E%90%EB%8F%99%20%EC%A0%95%EC%88%98%EA%B8%B0%20%ED%99%9C%EC%84%B1%ED%83%84%20%ED%95%84%ED%84%B0%208%EA%B0%9C%EC%9E%85%20%EC%84%B8%ED%8A%B8" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-10">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="다이어트">
-          <div class="card-badge">#11 영상 속 꿀템</div>
+        <div class="product-card" id="card-11" data-num="11" data-category="다이어트">
+          <div class="card-badge featured">🔥 #11 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800" alt="마이노멀 알룰로스 저당 데리야끼 소스 310g 2개입" loading="lazy">
           </div>
@@ -423,14 +461,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.8 (4,890개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/hEyKNvtEFU" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EB%A7%88%EC%9D%B4%EB%85%B8%EB%A9%80%20%EC%95%8C%EB%A3%B0%EB%A1%9C%EC%8A%A4%20%EC%A0%80%EB%8B%B9%20%EB%8D%B0%EB%A6%AC%EC%95%BC%EB%81%BC%20%EC%86%8C%EC%8A%A4%20310g%202%EA%B0%9C%EC%9E%85" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-11">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="다이어트">
-          <div class="card-badge">#12 영상 속 꿀템</div>
+        <div class="product-card" id="card-12" data-num="12" data-category="다이어트">
+          <div class="card-badge featured">🔥 #12 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?w=800" alt="단백질 쉐이커 믹싱볼 포함 보틀 700ml 2개입 세트" loading="lazy">
           </div>
@@ -444,14 +482,14 @@
             <div class="review-row">
               <span class="star">★</span> 4.7 (3,410개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/hEyKNvtEFU" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EB%8B%A8%EB%B0%B1%EC%A7%88%20%EC%89%90%EC%9D%B4%EC%BB%A4%20%EB%AF%B9%EC%8B%B1%EB%B3%BC%20%ED%8F%AC%ED%95%A8%20%EB%B3%B4%ED%8B%80%20700ml%202%EA%B0%9C%EC%9E%85%20%EC%84%B8%ED%8A%B8" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-12">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
         </div>
             
-        <div class="product-card" data-category="다이어트">
-          <div class="card-badge">#13 영상 속 꿀템</div>
+        <div class="product-card" id="card-13" data-num="13" data-category="다이어트">
+          <div class="card-badge featured">🔥 #13 영상 방영 꿀템</div>
           <div class="img-wrapper">
             <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800" alt="글루텐프리 곤약 쫀드기 저칼로리 간식 10개입" loading="lazy">
           </div>
@@ -465,7 +503,28 @@
             <div class="review-row">
               <span class="star">★</span> 4.6 (2,100개 리뷰)
             </div>
-            <a href="https://link.coupang.com/a/hEyKNvtEFU" target="_blank" rel="noopener noreferrer" class="btn-buy">
+            <a href="https://www.coupang.com/np/search?q=%EA%B8%80%EB%A3%A8%ED%85%90%ED%94%84%EB%A6%AC%20%EA%B3%A4%EC%95%BD%20%EC%AB%80%EB%93%9C%EA%B8%B0%20%EC%A0%80%EC%B9%BC%EB%A1%9C%EB%A6%AC%20%EA%B0%84%EC%8B%9D%2010%EA%B0%9C%EC%9E%85" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-13">
+              👉 쿠팡 최저가 보러가기
+            </a>
+          </div>
+        </div>
+            
+        <div class="product-card" id="card-None" data-num="None" data-category="펫상품">
+          <div class="card-badge featured">🔥 #None 영상 방영 꿀템</div>
+          <div class="img-wrapper">
+            <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=800" alt="강아지 분리불안 완화 스트레스 해소 킁킁 노즈워크 잔디 매트" loading="lazy">
+          </div>
+          <div class="card-content">
+            <div class="category-tag">펫상품</div>
+            <h3 class="product-title">강아지 분리불안 완화 스트레스 해소 킁킁 노즈워크 잔디 매트</h3>
+            <div class="price-row">
+              <span class="price-val">18,900원</span>
+              <span class="rocket-badge">⚡ 로켓배송</span>
+            </div>
+            <div class="review-row">
+              <span class="star">★</span> 4.7 (1,620개 리뷰)
+            </div>
+            <a href="https://www.coupang.com/np/search?q=%EA%B0%95%EC%95%84%EC%A7%80%20%EB%B6%84%EB%A6%AC%EB%B6%88%EC%95%88%20%EC%99%84%ED%99%94%20%EC%8A%A4%ED%8A%B8%EB%A0%88%EC%8A%A4%20%ED%95%B4%EC%86%8C%20%ED%82%81%ED%82%81%20%EB%85%B8%EC%A6%88%EC%9B%8C%ED%81%AC%20%EC%9E%94%EB%94%94%20%EB%A7%A4%ED%8A%B8" target="_blank" rel="noopener noreferrer" class="btn-buy" id="buy-btn-None">
               👉 쿠팡 최저가 보러가기
             </a>
           </div>
@@ -475,11 +534,12 @@
 
     <footer class="footer-ftc">
       본 페이지는 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.<br>
-      영상의 제품 번호(#1, #2...)와 일치하는 카드의 버튼을 클릭하시면 쿠팡 공식 상품 페이지로 이동합니다.
+      영상의 제품 번호(#1, #2...)와 일치하는 카드의 버튼을 클릭하시면 쿠팡 공식 상품 페이지로 안전하게 이동합니다.
     </footer>
   </main>
 
   <script>
+    // Category Filter
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -493,6 +553,30 @@
           }
         });
       });
+    });
+
+    // Quick Jump by Item Number
+    function jumpToNumber() {
+      const num = document.getElementById('quick-num-input').value.trim();
+      if (!num) return;
+      const targetCard = document.getElementById('card-' + num);
+      if (targetCard) {
+        // Reset category filter if needed
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector('[data-filter=all]').classList.add('active');
+        document.querySelectorAll('.product-card').forEach(c => c.style.display = 'flex');
+
+        targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetCard.classList.add('highlight');
+        setTimeout(() => targetCard.classList.remove('highlight'), 2000);
+      } else {
+        alert('#' + num + '번 상품을 찾을 수 없습니다.');
+      }
+    }
+
+    document.getElementById('btn-jump-num').addEventListener('click', jumpToNumber);
+    document.getElementById('quick-num-input').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') jumpToNumber();
     });
   </script>
 </body>

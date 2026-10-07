@@ -107,9 +107,8 @@ class AutoPilotScheduler:
         # 1. Deeplink
         deeplink = self.link_manager.ensure_deeplink(product)
 
-        # 2. Sequential Item Number
-        stats = get_stats()
-        item_num = (stats.get("total_products", 1))
+        # 2. Sequential Item Number (Directly synchronized with Showroom Number)
+        item_num = product.showroom_num or 1
 
         # 3. Generate 15-sec Vertical Shorts MP4
         from modules.video.shorts_generator import ShortsGenerator
