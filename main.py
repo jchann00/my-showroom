@@ -32,7 +32,8 @@ def main():
     parser = argparse.ArgumentParser(description="Threads & Coupang Partners Full Automation Engine")
     parser.add_argument("--host", default="127.0.0.1", help="Host IP to bind web dashboard")
     parser.add_argument("--port", type=int, default=None, help="Port to bind web dashboard")
-    parser.add_argument("--test", action="store_true", help="Run 1-cycle test immediately and exit")
+    parser.add_argument("--test", action="store_true", help="Run 1-cycle Threads test immediately and exit")
+    parser.add_argument("--test-shorts", action="store_true", help="Run 1-cycle Shorts & Showroom test immediately and exit")
     args = parser.parse_args()
 
     # Ensure DB initialized
@@ -40,9 +41,17 @@ def main():
 
     if args.test:
         from modules.scheduler.auto_pilot import AutoPilotScheduler
-        print("🚀 [CLI] 즉시 1회 자동 발행 테스트를 실행합니다...")
+        print("🚀 [CLI] 즉시 1회 쓰레드 자동 발행 테스트를 실행합니다...")
         scheduler = AutoPilotScheduler()
         res = scheduler.trigger_one_post(force_affiliate=True)
+        print(f"✅ 실행 완료: {res}")
+        return
+
+    if args.test_shorts:
+        from modules.scheduler.auto_pilot import AutoPilotScheduler
+        print("🎬 [CLI] 15초 숏츠 영상 제작 및 모바일 쇼룸 갱신 테스트를 실행합니다...")
+        scheduler = AutoPilotScheduler()
+        res = scheduler.trigger_shorts_cycle()
         print(f"✅ 실행 완료: {res}")
         return
 
