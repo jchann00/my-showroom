@@ -111,7 +111,7 @@ class YouTubePublisher:
             return None
         return None
 
-    def authenticate_interactive(self) -> Dict[str, Any]:
+    def authenticate_interactive(self, timeout: int = 90) -> Dict[str, Any]:
         """Triggers local browser login flow for YouTube channel authorization."""
         if not self.secrets_file.exists():
             return {
@@ -120,7 +120,14 @@ class YouTubePublisher:
             }
         try:
             flow = InstalledAppFlow.from_client_secrets_file(str(self.secrets_file), SCOPES)
-            creds = flow.run_local_server(port=0, prompt="consent", access_type="offline")
+            save_log("INFO", "youtube", f"Starting browser OAuth login (timeout {timeout}s)...")
+            creds = flow.run_local_server(
+                port=0,
+                prompt="consent",
+                access_type="offline",
+                timeout_seconds=timeout,
+                open_browser=True
+            )
             with open(self.token_file, "w", encoding="utf-8") as f:
                 f.write(creds.to_json())
             save_log("INFO", "youtube", "YouTube authorization successful! Token saved for 24/7 automation.")
@@ -131,8 +138,11 @@ class YouTubePublisher:
                 "message": "유튜브 채널 연동이 성공적으로 완료되었습니다!"
             }
         except Exception as e:
-            save_log("ERROR", "youtube", f"OAuth authentication failed: {e}")
-            return {"success": False, "error": str(e)}
+            err_msg = str(e)
+            if "timed out" in err_msg.lower() or "timeout" in err_msg.lower():
+                err_msg = "로그인 승인 대기 시간이 초과되었거나 사용자가 취소했습니다. 다시 시도해주세요."
+            save_log("WARNING", "youtube", f"OAuth authentication stopped: {err_msg}")
+            return {"success": False, "error": err_msg}
 
     def disconnect(self) -> bool:
         """Removes saved token file to disconnect channel."""

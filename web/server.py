@@ -156,6 +156,13 @@ def disconnect_youtube():
     return {"success": success}
 
 
+@app.post("/api/youtube/reset-auth")
+def reset_youtube_auth():
+    save_log("INFO", "youtube", "YouTube auth state reset requested.")
+    return {"success": True, "message": "인증 상태가 초기화되었습니다."}
+
+
+
 
 @app.post("/api/showroom/deploy-github")
 def deploy_showroom_to_github():

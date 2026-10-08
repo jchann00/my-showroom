@@ -869,27 +869,63 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // YouTube OAuth Login Handler
   const ytLoginBtn = document.getElementById("btn-yt-login");
+  const ytCancelBtn = document.getElementById("btn-yt-cancel-login");
+  let ytAuthAbortCtrl = null;
+
+  function resetYtLoginUI() {
+    if (ytLoginBtn) ytLoginBtn.disabled = false;
+    const spinner = document.getElementById("yt-login-spinner");
+    if (spinner) spinner.style.display = "none";
+    if (ytCancelBtn) ytCancelBtn.style.display = "none";
+  }
+
+  if (ytCancelBtn) {
+    ytCancelBtn.addEventListener("click", async () => {
+      if (ytAuthAbortCtrl) {
+        try { ytAuthAbortCtrl.abort(); } catch (e) {}
+      }
+      try {
+        await fetch("/api/youtube/reset-auth", { method: "POST" });
+      } catch (e) {}
+      resetYtLoginUI();
+      showToast("대기가 취소되었습니다. 언제든 다시 시도하실 수 있습니다.");
+    });
+  }
+
   if (ytLoginBtn) {
     ytLoginBtn.addEventListener("click", async () => {
       const spinner = document.getElementById("yt-login-spinner");
       try {
         ytLoginBtn.disabled = true;
         if (spinner) spinner.style.display = "inline-flex";
+        if (ytCancelBtn) ytCancelBtn.style.display = "inline-flex";
 
-        const res = await fetch("/api/youtube/authenticate", { method: "POST" });
+        ytAuthAbortCtrl = new AbortController();
+        const timeoutTimer = setTimeout(() => {
+          if (ytAuthAbortCtrl) ytAuthAbortCtrl.abort();
+        }, 95000);
+
+        const res = await fetch("/api/youtube/authenticate", {
+          method: "POST",
+          signal: ytAuthAbortCtrl.signal
+        });
+        clearTimeout(timeoutTimer);
         const data = await res.json();
 
         if (data.success) {
           alert(`🎉 축하합니다! 유튜브 채널 [${data.profile?.title || '채널'}] 연동이 완료되었습니다.\n이제 숏츠가 제작될 때마다 자동으로 업로드됩니다!`);
           loadStatus();
         } else {
-          alert("연동 실패: " + (data.error || "오류가 발생했습니다. client_secrets.json 파일을 먼저 등록했는지 확인해주세요."));
+          alert("연동 취소/실패: " + (data.error || "오류가 발생했습니다. client_secrets.json 파일을 먼저 등록했는지 확인해주세요."));
         }
       } catch (err) {
-        alert("인증 통신 오류: " + err.message);
+        if (err.name === 'AbortError') {
+          showToast("연동 대기가 취소되었습니다.");
+        } else {
+          alert("인증 통신 오류: " + err.message);
+        }
       } finally {
-        ytLoginBtn.disabled = false;
-        if (spinner) spinner.style.display = "none";
+        resetYtLoginUI();
       }
     });
   }
