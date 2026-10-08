@@ -854,7 +854,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await res.json();
         if (data.success) {
           alert("✅ client_secrets.json 파일이 성공적으로 등록되었습니다!\n이제 [내 유튜브 채널 로그인 & 연동 승인] 버튼을 눌러주세요.");
-          loadSettings();
+          loadStatus();
         } else {
           alert("파일 등록 실패: " + (data.error || "알 수 없는 오류"));
         }
@@ -881,7 +881,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.success) {
           alert(`🎉 축하합니다! 유튜브 채널 [${data.profile?.title || '채널'}] 연동이 완료되었습니다.\n이제 숏츠가 제작될 때마다 자동으로 업로드됩니다!`);
-          loadSettings();
+          loadStatus();
         } else {
           alert("연동 실패: " + (data.error || "오류가 발생했습니다. client_secrets.json 파일을 먼저 등록했는지 확인해주세요."));
         }
@@ -904,7 +904,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await res.json();
         if (data.success) {
           alert("유튜브 채널 연동이 해제되었습니다. (로컬 시뮬레이션 모드로 전환)");
-          loadSettings();
+          loadStatus();
         }
       } catch (err) {
         alert("해제 오류: " + err.message);
