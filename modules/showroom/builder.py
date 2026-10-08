@@ -394,9 +394,9 @@ class ShowroomBuilder:
 
     @classmethod
     def get_showroom_url(cls) -> str:
-        """Returns the public showroom URL if configured, or default localhost URL."""
+        """Returns the public showroom URL if configured, or default public GitHub Pages URL."""
         cfg = load_config()
         public_url = cfg.get("showroom", {}).get("public_url", "").strip()
         if public_url:
             return public_url
-        return "http://127.0.0.1:8080/showroom"
+        return "https://jchann00.github.io/my-showroom/"

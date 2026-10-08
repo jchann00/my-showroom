@@ -87,9 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ghEl) ghEl.textContent = data.golden_hours.join(" / ");
       }
 
-      // Showroom URL input
+      // Showroom URL input (Public GitHub Pages address)
       const showroomInput = document.getElementById("showroom-url-input");
-      if (showroomInput) showroomInput.value = window.location.origin + "/showroom";
+      if (showroomInput) showroomInput.value = data.config?.showroom?.public_url || "https://jchann00.github.io/my-showroom/";
 
       // Populate Settings form
       if (data.config) {

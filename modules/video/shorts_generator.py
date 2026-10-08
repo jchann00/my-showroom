@@ -411,8 +411,8 @@ class ShortsGenerator:
 
         yt_desc = (
             f"{script_pkg.get('narration')}\n\n"
-            f"👉 모바일 쇼룸 주소: {showroom_url}\n"
-            f"• 제품 번호: #{item_num}번 상품\n"
+            f"📌 구매 링크: 채널 프로필 쇼룸 [#{item_num}번 상품] 확인!\n"
+            f"• 제품 번호: #{item_num}번\n"
             f"• 가격: {product.price:,}원 (로켓배송)\n\n"
             f"이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다.\n\n"
             f"#쇼츠 #쿠팡 #살림꿀템 #자취템 #내돈내산 #{product.category}"
