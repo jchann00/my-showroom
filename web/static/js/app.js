@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const elElvVid = document.getElementById("cfg-elevenlabs-voice-id");
           if (elTtsProv) elTtsProv.value = c.tts.provider || "edge_tts";
           if (elTtsVoice) elTtsVoice.value = c.tts.edge_voice || "ko-KR-InJoonNeural";
-          if (elTtsSpeed) elTtsSpeed.value = c.tts.speed || "+15%";
+          if (elTtsSpeed) elTtsSpeed.value = c.tts.speed || "+0%";
           if (elElvKey) elElvKey.value = c.tts.elevenlabs_api_key || "";
           if (elElvVid) elElvVid.value = c.tts.elevenlabs_voice_id || "";
         }
@@ -741,7 +741,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tts: {
           provider: document.getElementById("cfg-tts-provider")?.value || "edge_tts",
           edge_voice: document.getElementById("cfg-tts-voice")?.value || "ko-KR-InJoonNeural",
-          speed: document.getElementById("cfg-tts-speed")?.value || "+15%",
+          speed: document.getElementById("cfg-tts-speed")?.value || "+0%",
           elevenlabs_api_key: (document.getElementById("cfg-elevenlabs-key")?.value || "").trim(),
           elevenlabs_voice_id: (document.getElementById("cfg-elevenlabs-voice-id")?.value || "").trim()
         },

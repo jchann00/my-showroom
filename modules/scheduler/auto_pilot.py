@@ -101,6 +101,10 @@ class AutoPilotScheduler:
             product = get_pending_product()
 
         if not product:
+            from database.db import get_next_product_to_post
+            product = get_next_product_to_post()
+
+        if not product:
             save_log("WARNING", "shorts", "No products available for Shorts.")
             return {"success": False, "error": "No product available"}
 

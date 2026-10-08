@@ -181,6 +181,43 @@ def mark_product_posted(product_id: str):
     conn.close()
 
 
+def mark_product_pending(product_id: str):
+    """Mark product as pending."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE products SET status = 'pending' WHERE product_id = ?", (product_id,))
+    conn.commit()
+    conn.close()
+
+
+def get_next_product_to_post(category: Optional[str] = None) -> Optional[Product]:
+    """Retrieve an unposted product, or if all are posted, recycle the oldest posted product."""
+    product = get_pending_product(category)
+    if product:
+        return product
+
+    conn = get_connection()
+    cursor = conn.cursor()
+    if category:
+        cursor.execute("""
+            SELECT * FROM products 
+            WHERE category = ?
+            ORDER BY posted_at ASC, showroom_num ASC LIMIT 1
+        """, (category,))
+    else:
+        cursor.execute("""
+            SELECT * FROM products 
+            ORDER BY posted_at ASC, showroom_num ASC LIMIT 1
+        """)
+    row = cursor.fetchone()
+    conn.close()
+    if not row:
+        return None
+    mark_product_pending(row["product_id"])
+    return get_pending_product(category)
+
+
+
 def save_post_record(record: PostRecord) -> int:
     """Save post record and return inserted ID."""
     conn = get_connection()

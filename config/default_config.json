@@ -27,7 +27,7 @@
   "tts": {
     "provider": "edge_tts",
     "edge_voice": "ko-KR-InJoonNeural",
-    "speed": "+15%",
+    "speed": "+0%",
     "elevenlabs_api_key": "",
     "elevenlabs_voice_id": ""
   },
