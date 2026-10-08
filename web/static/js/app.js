@@ -417,10 +417,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const latest = posts[0];
-      const mainTextEl = document.getElementById("preview-main-text");
-      const c1El = document.getElementById("preview-comment-1");
-      const c2El = document.getElementById("preview-comment-2");
-      const c3El = document.getElementById("preview-comment-3");
 
       if (mainTextEl) mainTextEl.textContent = latest.main_text || "";
       if (c1El) c1El.textContent = latest.comment_1 || "없음";
@@ -428,7 +424,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (c3El) c3El.textContent = latest.comment_3 || "없음";
 
       // Cards
-      const cardsBox = document.getElementById("preview-cards");
       if (cardsBox) {
         cardsBox.innerHTML = "";
         if (latest.image_paths) {
@@ -448,7 +443,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       // Product Details
-      const detailBox = document.getElementById("preview-product-detail");
       if (detailBox) {
         if (latest.product_title) {
           detailBox.innerHTML = `
