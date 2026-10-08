@@ -167,19 +167,50 @@ document.addEventListener("DOMContentLoaded", () => {
         const ytRes = await fetch("/api/youtube/status");
         const ytData = await ytRes.json();
         const ytBadge = document.getElementById("yt-auth-status-badge");
+        const ytDesc = document.getElementById("yt-status-description");
+        const ytCard = document.getElementById("yt-connected-channel-card");
+        const ytLoginBtn = document.getElementById("btn-yt-login");
+
         if (ytBadge) {
           if (ytData.is_authenticated) {
             ytBadge.style.background = "rgba(34, 197, 94, 0.2)";
             ytBadge.style.color = "#4ADE80";
             ytBadge.textContent = "✅ Google OAuth 연동 완료 (24/7 자동 업로드 가동)";
+            if (ytDesc) {
+              ytDesc.innerHTML = `🎉 <strong>유튜브 채널이 성공적으로 연결되었습니다!</strong> 숏츠가 제작될 때마다 내 채널로 자동 업로드됩니다. (현재 로컬 영상: ${ytData.local_videos_count || 0}개)`;
+            }
+            if (ytCard) {
+              ytCard.style.display = "flex";
+              const profile = ytData.channel_profile || {};
+              const nameEl = document.getElementById("yt-channel-name");
+              const subEl = document.getElementById("yt-channel-subscribers");
+              const avatar = document.getElementById("yt-channel-avatar");
+              if (nameEl) nameEl.textContent = profile.title || "내 유튜브 채널";
+              if (subEl) subEl.textContent = `구독자 ${parseInt(profile.subscribers || 0).toLocaleString()}명 ${profile.custom_url ? '(' + profile.custom_url + ')' : ''}`;
+              if (avatar && profile.thumbnail) {
+                avatar.src = profile.thumbnail;
+                avatar.style.display = "block";
+              }
+            }
+            if (ytLoginBtn) ytLoginBtn.style.display = "none";
           } else if (ytData.secrets_file_exists) {
             ytBadge.style.background = "rgba(56, 189, 248, 0.2)";
             ytBadge.style.color = "#38BDF8";
-            ytBadge.textContent = "⚡ client_secrets 준비됨 (첫 업로드 시 1회 승인 대기)";
+            ytBadge.textContent = "⚡ client_secrets 등록됨 (로그인 승인 대기)";
+            if (ytDesc) {
+              ytDesc.innerHTML = `🔑 <strong>client_secrets.json이 등록되었습니다.</strong> 아래 [내 유튜브 채널 로그인 & 연동 승인] 버튼을 눌러 구글 계정을 연결해주세요.`;
+            }
+            if (ytCard) ytCard.style.display = "none";
+            if (ytLoginBtn) ytLoginBtn.style.display = "inline-flex";
           } else {
             ytBadge.style.background = "rgba(251, 191, 36, 0.15)";
             ytBadge.style.color = "#FBBF24";
-            ytBadge.textContent = "💡 시뮬레이션 모드 (client_secrets.json 등록 시 자동 송출)";
+            ytBadge.textContent = "💡 로컬 시뮬레이션 모드 (계정 미등록)";
+            if (ytDesc) {
+              ytDesc.innerHTML = `💡 <strong>현재 영상 저장 위치:</strong> 계정이 연동되지 않아 <strong>[로컬 렌더링 & 시뮬레이션 모드]</strong>로 안전하게 실행 중입니다. 생성된 영상(.mp4 ${ytData.local_videos_count || 0}개)과 썸네일은 내 PC(<code>data/videos/</code>)에 저장되어 있습니다.`;
+            }
+            if (ytCard) ytCard.style.display = "none";
+            if (ytLoginBtn) ytLoginBtn.style.display = "inline-flex";
           }
         }
       } catch (err) {
@@ -800,6 +831,87 @@ document.addEventListener("DOMContentLoaded", () => {
   if (refreshLogsBtn) {
     refreshLogsBtn.addEventListener("click", loadLogs);
   }
+
+  // YouTube client_secrets Upload Handler
+  const ytUploadBtn = document.getElementById("btn-yt-upload-secrets");
+  if (ytUploadBtn) {
+    ytUploadBtn.addEventListener("click", async () => {
+      const fileInput = document.getElementById("yt-secrets-file-input");
+      if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+        alert("Google Cloud 콘솔에서 다운로드한 client_secrets.json 파일을 먼저 선택해주세요.");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("file", fileInput.files[0]);
+
+      try {
+        ytUploadBtn.disabled = true;
+        ytUploadBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> 업로드 중...';
+        const res = await fetch("/api/youtube/upload-secrets", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert("✅ client_secrets.json 파일이 성공적으로 등록되었습니다!\n이제 [내 유튜브 채널 로그인 & 연동 승인] 버튼을 눌러주세요.");
+          loadSettings();
+        } else {
+          alert("파일 등록 실패: " + (data.error || "알 수 없는 오류"));
+        }
+      } catch (err) {
+        alert("업로드 통신 오류: " + err.message);
+      } finally {
+        ytUploadBtn.disabled = false;
+        ytUploadBtn.innerHTML = '<i class="ri-upload-2-line"></i> 파일 등록';
+      }
+    });
+  }
+
+  // YouTube OAuth Login Handler
+  const ytLoginBtn = document.getElementById("btn-yt-login");
+  if (ytLoginBtn) {
+    ytLoginBtn.addEventListener("click", async () => {
+      const spinner = document.getElementById("yt-login-spinner");
+      try {
+        ytLoginBtn.disabled = true;
+        if (spinner) spinner.style.display = "inline-flex";
+
+        const res = await fetch("/api/youtube/authenticate", { method: "POST" });
+        const data = await res.json();
+
+        if (data.success) {
+          alert(`🎉 축하합니다! 유튜브 채널 [${data.profile?.title || '채널'}] 연동이 완료되었습니다.\n이제 숏츠가 제작될 때마다 자동으로 업로드됩니다!`);
+          loadSettings();
+        } else {
+          alert("연동 실패: " + (data.error || "오류가 발생했습니다. client_secrets.json 파일을 먼저 등록했는지 확인해주세요."));
+        }
+      } catch (err) {
+        alert("인증 통신 오류: " + err.message);
+      } finally {
+        ytLoginBtn.disabled = false;
+        if (spinner) spinner.style.display = "none";
+      }
+    });
+  }
+
+  // YouTube Disconnect Handler
+  const ytDisconnectBtn = document.getElementById("btn-yt-disconnect");
+  if (ytDisconnectBtn) {
+    ytDisconnectBtn.addEventListener("click", async () => {
+      if (!confirm("정말 유튜브 채널 연동을 해제하시겠습니까?")) return;
+      try {
+        const res = await fetch("/api/youtube/disconnect", { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+          alert("유튜브 채널 연동이 해제되었습니다. (로컬 시뮬레이션 모드로 전환)");
+          loadSettings();
+        }
+      } catch (err) {
+        alert("해제 오류: " + err.message);
+      }
+    });
+  }
+
 
   // Initial loads
   loadStatus();

@@ -2,11 +2,12 @@ import os
 import json
 from pathlib import Path
 from typing import Dict, Any, Optional
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+
 
 from config.settings import load_config, save_config, BASE_DIR, IMAGE_DIR
 from database.db import (
@@ -109,13 +110,51 @@ async def get_videos():
 def get_youtube_status():
     from modules.publisher.youtube_api import YouTubePublisher
     yt = YouTubePublisher()
+    profile = yt.get_channel_profile() if yt.is_authenticated() else None
     return {
         "enabled": yt.enabled,
         "is_authenticated": yt.is_authenticated(),
         "has_credentials": yt.has_credentials(),
         "secrets_file_exists": yt.secrets_file.exists(),
-        "privacy_status": yt.privacy_status
+        "privacy_status": yt.privacy_status,
+        "channel_profile": profile,
+        "local_videos_count": len(list(VIDEOS_DIR.glob("*.mp4")))
     }
+
+
+@app.post("/api/youtube/upload-secrets")
+async def upload_youtube_secrets(file: UploadFile = File(...)):
+    try:
+        content = await file.read()
+        data = json.loads(content.decode("utf-8"))
+        if "installed" not in data and "web" not in data:
+            return JSONResponse(status_code=400, content={"success": False, "error": "올바른 Google OAuth 클라이언트 JSON(client_secrets.json) 형식이 아닙니다."})
+
+        target_path = BASE_DIR / "config" / "client_secrets.json"
+        with open(target_path, "wb") as f:
+            f.write(content)
+        save_log("INFO", "youtube", "client_secrets.json uploaded successfully via web dashboard.")
+        return {"success": True, "message": "Google OAuth client_secrets.json 파일이 성공적으로 등록되었습니다!"}
+    except Exception as e:
+        save_log("ERROR", "youtube", f"Failed to upload client_secrets.json: {e}")
+        return JSONResponse(status_code=500, content={"success": False, "error": str(e)})
+
+
+@app.post("/api/youtube/authenticate")
+def authenticate_youtube():
+    from modules.publisher.youtube_api import YouTubePublisher
+    yt = YouTubePublisher()
+    res = yt.authenticate_interactive()
+    return res
+
+
+@app.post("/api/youtube/disconnect")
+def disconnect_youtube():
+    from modules.publisher.youtube_api import YouTubePublisher
+    yt = YouTubePublisher()
+    success = yt.disconnect()
+    return {"success": success}
+
 
 
 @app.post("/api/showroom/deploy-github")

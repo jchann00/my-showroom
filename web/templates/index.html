@@ -476,15 +476,46 @@
               </div>
 
               <!-- YouTube Shorts Automation Section -->
-              <div class="form-group full-width" style="grid-column: span 2; background: rgba(225, 29, 72, 0.05); border: 1px solid rgba(225, 29, 72, 0.25); border-radius: 12px; padding: 14px; margin-top: 6px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                  <span style="font-weight: 700; color: #F43F5E; font-size: 14px;">🎬 유튜브 숏츠 자동 업로드 (YouTube Data API v3)</span>
-                  <span id="yt-auth-status-badge" style="background: rgba(251, 191, 36, 0.15); color: #FBBF24; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 600;">연동 상태 확인 중...</span>
+              <div class="form-group full-width" style="grid-column: span 2; background: rgba(225, 29, 72, 0.04); border: 1px solid rgba(225, 29, 72, 0.3); border-radius: 14px; padding: 18px; margin-top: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="ri-youtube-fill" style="color: #F43F5E; font-size: 22px;"></i>
+                    <span style="font-weight: 700; color: #F43F5E; font-size: 15px;">유튜브 채널 연동 & 숏츠 자동 업로드 설정</span>
+                  </div>
+                  <span id="yt-auth-status-badge" style="background: rgba(251, 191, 36, 0.15); color: #FBBF24; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600;">연동 상태 확인 중...</span>
                 </div>
-                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-                  <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #fff;">
+
+                <!-- Current Upload Destination Status Banner -->
+                <div id="yt-status-banner" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 12.5px; line-height: 1.6;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div id="yt-status-description" style="color: #CBD5E1;">
+                      💡 <strong>현재 영상 저장 위치:</strong> 계정이 연동되지 않아 <strong>[로컬 렌더링 & 시뮬레이션 모드]</strong>로 안전하게 실행 중입니다. 생성된 영상(.mp4)과 썸네일은 내 PC(<code>data/videos/</code>)에 저장되어 있습니다.
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="document.querySelector('[data-tab=\'videos\']')?.click()" style="font-size: 11.5px; padding: 5px 12px;">
+                      <i class="ri-movie-line"></i> 생성된 영상 목록 보기
+                    </button>
+                  </div>
+
+                  <!-- Channel Connected Profile Box (Shown when authenticated) -->
+                  <div id="yt-connected-channel-card" style="display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                      <img id="yt-channel-avatar" src="" style="width: 38px; height: 38px; border-radius: 50%; border: 2px solid #F43F5E; object-fit: cover; display: none;">
+                      <div>
+                        <div id="yt-channel-name" style="font-weight: 700; color: #F8FAFC; font-size: 13.5px;">연동된 채널명</div>
+                        <div id="yt-channel-subscribers" style="font-size: 11.5px; color: #94A3B8;">구독자 --명</div>
+                      </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="btn-yt-disconnect" style="font-size: 11px; padding: 4px 10px; color: #F87171;">
+                      <i class="ri-logout-box-r-line"></i> 연동 해제
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Automation Toggle & Privacy Controls -->
+                <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; background: rgba(0,0,0,0.2); padding: 10px 12px; border-radius: 8px;">
+                  <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #fff; cursor: pointer;">
                     <input type="checkbox" id="cfg-yt-enabled" checked style="width: 16px; height: 16px; accent-color: #E11D48;">
-                    <span>숏츠 제작 완료 시 유튜브 채널에 즉시 자동 게시</span>
+                    <span>숏츠 제작 완료 시 내 유튜브 채널에 즉시 자동 게시</span>
                   </label>
                   <div style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
                     <span style="color: var(--text-muted);">게시 공개 상태:</span>
@@ -495,8 +526,47 @@
                     </select>
                   </div>
                 </div>
-                <div style="font-size: 11.5px; color: var(--text-muted); margin-top: 8px; line-height: 1.5;">
-                  💡 <strong>Google OAuth 연동 방법:</strong> Google Cloud 콘솔에서 OAuth 2.0 클라이언트 ID(데스크톱 앱)의 <code>client_secrets.json</code>을 <code>config/</code> 폴더에 넣으시면 1회 승인 후 24시간 완전 무인 자동 업로드됩니다. (미등록 시에도 영상 제작 및 다운로드, 쇼룸 갱신은 100% 정상 작동)
+
+                <!-- Channel Connection Action Box -->
+                <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(225, 29, 72, 0.4); border-radius: 10px; padding: 14px;">
+                  <div style="font-weight: 600; font-size: 13px; color: #F8FAFC; margin-bottom: 8px;">
+                    🔑 유튜브 채널 연동하기 (Google OAuth 2.0)
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <div>
+                      <label style="font-size: 11.5px; color: var(--text-muted); display: block; margin-bottom: 4px;">
+                        1단계: Google Cloud 콘솔에서 발급받은 <strong>client_secrets.json</strong> 파일 등록
+                      </label>
+                      <input type="file" id="yt-secrets-file-input" accept=".json" class="form-control" style="font-size: 12px; padding: 6px;">
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="btn-yt-upload-secrets" style="align-self: flex-end; padding: 8px 14px; font-size: 12px;">
+                      <i class="ri-upload-2-line"></i> 파일 등록
+                    </button>
+                  </div>
+
+                  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 6px;">
+                    <button type="button" class="btn btn-primary" id="btn-yt-login" style="background: #E11D48; border-color: #E11D48; font-size: 13px; font-weight: 600; padding: 9px 18px;">
+                      <i class="ri-google-fill"></i> 내 유튜브 채널 로그인 &amp; 연동 승인
+                    </button>
+                    <span id="yt-login-spinner" style="display: none; font-size: 12px; color: #38BDF8;">
+                      <i class="ri-loader-4-line ri-spin"></i> 브라우저에서 구글 계정 로그인 승인 대기 중...
+                    </span>
+                  </div>
+
+                  <!-- Guide Details Dropdown -->
+                  <details style="margin-top: 12px; font-size: 12px; color: #94A3B8; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px;">
+                    <summary style="cursor: pointer; color: #38BDF8; font-weight: 600;">
+                      📖 [안내] Google Cloud 콘솔에서 3분 만에 무료로 client_secrets.json 발급받는 법
+                    </summary>
+                    <ol style="margin: 8px 0 0 18px; padding: 0; line-height: 1.7;">
+                      <li><a href="https://console.cloud.google.com/" target="_blank" style="color: #F43F5E; text-decoration: underline;">Google Cloud Console</a>에 접속하여 새 프로젝트를 생성합니다.</li>
+                      <li><strong>[API 및 서비스] &gt; [라이브러리]</strong>로 이동하여 <strong>YouTube Data API v3</strong>를 검색한 후 [사용]을 누릅니다.</li>
+                      <li><strong>[OAuth 동의 화면]</strong>에서 '외부(External)' 선택 &gt; 앱 이름(예: MyShorts) 입력 후 완료합니다. (테스트 사용자에 본인 구글 이메일 추가)</li>
+                      <li><strong>[사용자 인증 정보] &gt; [사용자 인증 정보 만들기] &gt; [OAuth 클라이언트 ID]</strong>를 클릭하고 애플리케이션 유형을 <strong>'데스크톱 앱(Desktop App)'</strong>으로 선택합니다.</li>
+                      <li>생성된 클라이언트의 <strong>JSON 다운로드</strong>를 눌러 다운받은 파일을 위 파일 선택창에 넣고 [파일 등록] ➔ [내 유튜브 채널 로그인 &amp; 연동 승인]을 누르면 완료됩니다!</li>
+                    </ol>
+                  </details>
                 </div>
               </div>
 

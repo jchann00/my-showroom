@@ -89,6 +89,63 @@ class YouTubePublisher:
 
         return build("youtube", "v3", credentials=creds)
 
+    def get_channel_profile(self) -> Optional[Dict[str, Any]]:
+        """Returns channel title, customUrl, thumbnail, subscribers if authorized."""
+        if not self.is_authenticated():
+            return None
+        try:
+            yt = self.get_service()
+            res = yt.channels().list(part="snippet,statistics", mine=True).execute()
+            items = res.get("items", [])
+            if items:
+                ch = items[0]
+                return {
+                    "id": ch.get("id"),
+                    "title": ch.get("snippet", {}).get("title"),
+                    "custom_url": ch.get("snippet", {}).get("customUrl", ""),
+                    "subscribers": ch.get("statistics", {}).get("subscriberCount", "0"),
+                    "thumbnail": ch.get("snippet", {}).get("thumbnails", {}).get("default", {}).get("url", "")
+                }
+        except Exception as e:
+            save_log("WARNING", "youtube", f"Failed to get channel profile: {e}")
+            return None
+        return None
+
+    def authenticate_interactive(self) -> Dict[str, Any]:
+        """Triggers local browser login flow for YouTube channel authorization."""
+        if not self.secrets_file.exists():
+            return {
+                "success": False,
+                "error": "client_secrets.json 파일이 없습니다. Google Cloud 콘솔에서 발급받은 OAuth 클라이언트 JSON 파일을 먼저 업로드해주세요."
+            }
+        try:
+            flow = InstalledAppFlow.from_client_secrets_file(str(self.secrets_file), SCOPES)
+            creds = flow.run_local_server(port=0, prompt="consent", access_type="offline")
+            with open(self.token_file, "w", encoding="utf-8") as f:
+                f.write(creds.to_json())
+            save_log("INFO", "youtube", "YouTube authorization successful! Token saved for 24/7 automation.")
+            profile = self.get_channel_profile()
+            return {
+                "success": True,
+                "profile": profile,
+                "message": "유튜브 채널 연동이 성공적으로 완료되었습니다!"
+            }
+        except Exception as e:
+            save_log("ERROR", "youtube", f"OAuth authentication failed: {e}")
+            return {"success": False, "error": str(e)}
+
+    def disconnect(self) -> bool:
+        """Removes saved token file to disconnect channel."""
+        try:
+            if self.token_file.exists():
+                self.token_file.unlink()
+            save_log("INFO", "youtube", "YouTube account disconnected.")
+            return True
+        except Exception as e:
+            save_log("ERROR", "youtube", f"Failed to disconnect YouTube account: {e}")
+            return False
+
+
     def upload_short(
         self,
         video_path: str,
