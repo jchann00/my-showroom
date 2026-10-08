@@ -60,6 +60,15 @@ class ShowroomBuilder:
         </div>
             """
 
+        if not items_html.strip():
+            items_html = """
+        <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--text-muted); background: rgba(30, 41, 59, 0.5); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+          <div style="font-size: 40px; margin-bottom: 12px;">📦</div>
+          <h3 style="color: #F8FAFC; margin-bottom: 6px;">등록된 쇼룸 상품이 없습니다</h3>
+          <p style="font-size: 13px;">새로운 영상이 제작되면 여기에 자동으로 상품 카드가 등록됩니다.</p>
+        </div>
+            """
+
         html_content = f"""<!DOCTYPE html>
 <html lang="ko">
 <head>

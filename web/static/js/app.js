@@ -262,14 +262,16 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const vRes = await fetch("/api/videos");
         const videos = await vRes.json();
+        const vidPlayer = document.getElementById("spotlight-video");
+        const vidTitle = document.getElementById("spotlight-title");
+        const vidMeta = document.getElementById("spotlight-meta");
+        const vidYtTitle = document.getElementById("spotlight-yt-title");
+        const vidYtDesc = document.getElementById("spotlight-yt-desc");
+        const dlBtn = document.getElementById("spotlight-download-btn");
+        const delBtn = document.getElementById("btn-delete-spotlight-video");
+
         if (videos && videos.length > 0) {
           const latestVideo = videos[0];
-          const vidPlayer = document.getElementById("spotlight-video");
-          const vidTitle = document.getElementById("spotlight-title");
-          const vidMeta = document.getElementById("spotlight-meta");
-          const vidYtTitle = document.getElementById("spotlight-yt-title");
-          const vidYtDesc = document.getElementById("spotlight-yt-desc");
-          const dlBtn = document.getElementById("spotlight-download-btn");
 
           if (vidPlayer && !vidPlayer.src.includes(latestVideo.filename)) {
             vidPlayer.src = latestVideo.url;
@@ -279,7 +281,9 @@ document.addEventListener("DOMContentLoaded", () => {
           if (dlBtn) {
             dlBtn.href = latestVideo.url;
             dlBtn.download = latestVideo.filename;
+            dlBtn.style.display = "inline-flex";
           }
+          if (delBtn) delBtn.style.display = "inline-flex";
 
           const latestShortPost = posts.find(p => p.post_type === 'shorts');
           if (latestShortPost) {
@@ -292,6 +296,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (vidYtTitle) vidYtTitle.textContent = `[추천] ${latestVideo.filename.replace('_shorts.mp4', '')} 솔직후기 #shorts`;
             if (vidYtDesc) vidYtDesc.textContent = "프로필 쇼룸 링크에서 최저가 확인하세요!\n#shorts #쿠팡 #살림꿀템";
           }
+        } else {
+          if (vidPlayer) vidPlayer.src = "";
+          if (vidTitle) vidTitle.textContent = "생성된 숏츠 영상이 없습니다";
+          if (vidMeta) vidMeta.textContent = "상단 [🎬 15초 숏츠 영상 제작 & 쇼룸 갱신] 버튼을 눌러보세요.";
+          if (vidYtTitle) vidYtTitle.textContent = "-";
+          if (vidYtDesc) vidYtDesc.textContent = "-";
+          if (dlBtn) dlBtn.style.display = "none";
+          if (delBtn) delBtn.style.display = "none";
         }
       } catch (err) {
         console.error("Failed to update spotlight:", err);
@@ -332,17 +344,50 @@ document.addEventListener("DOMContentLoaded", () => {
               <span>💾 ${v.size_mb} MB</span>
               <span>🕒 ${v.created_at || ''}</span>
             </div>
-            <div style="margin-top: auto; display: flex; gap: 8px; padding-top: 6px;">
-              <a href="${v.url}" download="${v.filename}" class="btn btn-secondary" style="flex: 1; text-align: center; text-decoration: none; font-size: 12px; padding: 8px;">
+            <div style="margin-top: auto; display: flex; gap: 6px; padding-top: 6px; flex-wrap: wrap;">
+              <a href="${v.url}" download="${v.filename}" class="btn btn-secondary" style="flex: 1; text-align: center; text-decoration: none; font-size: 11.5px; padding: 7px 10px;">
                 <i class="ri-download-line"></i> 다운로드
               </a>
-              <button class="btn btn-primary" onclick="navigator.clipboard.writeText(window.location.origin + '${v.url}'); alert('영상 링크가 복사되었습니다!');" style="font-size: 12px; padding: 8px 12px;">
+              <button class="btn btn-primary btn-copy-vid-link" data-url="${v.url}" style="font-size: 11.5px; padding: 7px 10px;" title="영상 링크 복사">
                 <i class="ri-file-copy-line"></i>
+              </button>
+              <button class="btn btn-secondary btn-del-video" data-filename="${v.filename}" style="color: #F87171; border-color: rgba(239,68,68,0.3); font-size: 11.5px; padding: 7px 10px;" title="영상 파일 삭제">
+                <i class="ri-delete-bin-line"></i> 삭제
               </button>
             </div>
           </div>
         </div>
       `).join("");
+
+      // Bind copy link buttons
+      container.querySelectorAll(".btn-copy-vid-link").forEach(btn => {
+        btn.addEventListener("click", () => {
+          navigator.clipboard.writeText(window.location.origin + btn.dataset.url);
+          showToast("📋 영상 링크가 복사되었습니다!");
+        });
+      });
+
+      // Bind individual delete video buttons
+      container.querySelectorAll(".btn-del-video").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const fn = btn.dataset.filename;
+          if (!confirm(`이 영상(${fn}) 및 관련 임시 파일을 삭제하시겠습니까?`)) return;
+          try {
+            const res = await fetch(`/api/videos/${encodeURIComponent(fn)}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+              showToast("🗑️ " + data.message);
+              loadVideos();
+              loadOverviewRecent();
+              loadStatus();
+            } else {
+              alert("삭제 실패: " + (data.error || "알 수 없는 오류"));
+            }
+          } catch (e) {
+            alert("삭제 통신 오류: " + e.message);
+          }
+        });
+      });
     } catch (e) {
       console.error("loadVideos error:", e);
       container.innerHTML = `<p style="color: #F87171;">영상 목록 로드 실패: ${e.message}</p>`;
@@ -354,7 +399,22 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch("/api/posts");
       const posts = await res.json();
-      if (!posts || posts.length === 0) return;
+      const mainTextEl = document.getElementById("preview-main-text");
+      const c1El = document.getElementById("preview-comment-1");
+      const c2El = document.getElementById("preview-comment-2");
+      const c3El = document.getElementById("preview-comment-3");
+      const cardsBox = document.getElementById("preview-cards");
+      const detailBox = document.getElementById("preview-product-detail");
+
+      if (!posts || posts.length === 0) {
+        if (mainTextEl) mainTextEl.textContent = "발행된 이력이 없습니다. 상단 [🎬 15초 숏츠 영상 제작 & 쇼룸 갱신] 버튼을 누르면 새로운 콘텐츠가 생성됩니다.";
+        if (c1El) c1El.textContent = "-";
+        if (c2El) c2El.textContent = "-";
+        if (c3El) c3El.textContent = "-";
+        if (cardsBox) cardsBox.innerHTML = "";
+        if (detailBox) detailBox.innerHTML = "<p style='color: var(--text-muted);'>데이터베이스에 등록된 발행 기록이 없습니다.</p>";
+        return;
+      }
 
       const latest = posts[0];
       const mainTextEl = document.getElementById("preview-main-text");
@@ -443,17 +503,50 @@ document.addEventListener("DOMContentLoaded", () => {
           <td>${p.is_rocket ? '<span style="color: #4ADE80; font-weight: 600;">✓ 로켓배송</span>' : '일반'}</td>
           <td>${linkDisplay}</td>
           <td>
-            <button class="btn btn-secondary btn-edit-link" 
-                    data-id="${p.product_id}" 
-                    data-title="${encodeURIComponent(p.title)}" 
-                    data-link="${encodeURIComponent(p.deeplink || '')}" 
-                    style="font-size: 11px; padding: 4px 8px;">
-              <i class="ri-edit-line"></i> 링크 수정
-            </button>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-secondary btn-edit-link" 
+                      data-id="${p.product_id}" 
+                      data-title="${encodeURIComponent(p.title)}" 
+                      data-link="${encodeURIComponent(p.deeplink || '')}" 
+                      style="font-size: 11px; padding: 4px 8px;">
+                <i class="ri-edit-line"></i> 링크 수정
+              </button>
+              <button class="btn btn-secondary btn-del-product" 
+                      data-id="${p.product_id}" 
+                      data-title="${encodeURIComponent(p.title)}" 
+                      style="color: #F87171; border-color: rgba(239,68,68,0.3); font-size: 11px; padding: 4px 8px;"
+                      title="이 상품 삭제">
+                <i class="ri-delete-bin-line"></i> 삭제
+              </button>
+            </div>
           </td>
         </tr>
       `;
       }).join("");
+
+      // Bind delete product buttons
+      tbody.querySelectorAll(".btn-del-product").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const pid = btn.dataset.id;
+          const ptitle = decodeURIComponent(btn.dataset.title);
+          if (!confirm(`[${ptitle}]\n\n이 상품을 쇼룸 및 데이터베이스에서 삭제하시겠습니까?`)) return;
+          try {
+            const res = await fetch(`/api/products/${encodeURIComponent(pid)}`, { method: "DELETE" });
+            const data = await res.json();
+            if (data.success) {
+              showToast("🗑️ " + data.message);
+              loadProducts();
+              loadStatus();
+              const iframe = document.getElementById("showroom-iframe");
+              if (iframe) iframe.src = "/showroom?t=" + Date.now();
+            } else {
+              alert("삭제 실패: " + (data.error || "오류 발생"));
+            }
+          } catch (e) {
+            alert("삭제 통신 오류: " + e.message);
+          }
+        });
+      });
 
       // Bind edit link buttons
       tbody.querySelectorAll(".btn-edit-link").forEach(btn => {
@@ -677,6 +770,118 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast("🔄 영상 목록을 새로고침했습니다.");
     });
   }
+
+  // Action: Delete Spotlight Video
+  const btnDeleteSpotlight = document.getElementById("btn-delete-spotlight-video");
+  if (btnDeleteSpotlight) {
+    btnDeleteSpotlight.addEventListener("click", async () => {
+      const vidPlayer = document.getElementById("spotlight-video");
+      if (!vidPlayer || !vidPlayer.src) return;
+      const filename = vidPlayer.src.split("/").pop().split("?")[0];
+      if (!filename || !filename.endsWith(".mp4")) return;
+      if (!confirm(`현재 표시된 최신 영상(${filename})을 삭제하시겠습니까?`)) return;
+      try {
+        const res = await fetch(`/api/videos/${encodeURIComponent(filename)}`, { method: "DELETE" });
+        const data = await res.json();
+        if (data.success) {
+          showToast("🗑️ " + data.message);
+          loadVideos();
+          loadOverviewRecent();
+          loadStatus();
+        } else {
+          alert("삭제 실패: " + (data.error || "알 수 없는 오류"));
+        }
+      } catch (e) {
+        alert("삭제 통신 오류: " + e.message);
+      }
+    });
+  }
+
+  // Action: Clear All Videos
+  const btnClearAllVideos = document.getElementById("btn-clear-all-videos");
+  if (btnClearAllVideos) {
+    btnClearAllVideos.addEventListener("click", async () => {
+      if (!confirm("⚠️ 저장된 모든 영상(.mp4 및 썸네일)을 정말 전부 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+      try {
+        const res = await fetch("/api/videos/clear-all", { method: "POST" });
+        const data = await res.json();
+        if (data.success) {
+          showToast("🗑️ " + data.message);
+          loadVideos();
+          loadOverviewRecent();
+          loadStatus();
+        } else {
+          alert("삭제 실패: " + (data.error || "알 수 없는 오류"));
+        }
+      } catch (e) {
+        alert("삭제 통신 오류: " + e.message);
+      }
+    });
+  }
+
+  // Action: Clear All Products (Showroom & Products pool)
+  async function handleClearAllProducts() {
+    if (!confirm("⚠️ 쇼룸에 등록된 모든 상품을 삭제하고 모바일 쇼룸을 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.")) return;
+    try {
+      const res = await fetch("/api/products/clear-all", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        showToast("🗑️ " + data.message);
+        loadProducts();
+        loadStatus();
+        const iframe = document.getElementById("showroom-iframe");
+        if (iframe) iframe.src = "/showroom?t=" + Date.now();
+      } else {
+        alert("초기화 실패: " + (data.error || "알 수 없는 오류"));
+      }
+    } catch (e) {
+      alert("초기화 통신 오류: " + e.message);
+    }
+  }
+
+  const btnClearShowroomProducts = document.getElementById("btn-clear-showroom-products");
+  if (btnClearShowroomProducts) btnClearShowroomProducts.addEventListener("click", handleClearAllProducts);
+
+  const btnClearAllProducts = document.getElementById("btn-clear-all-products");
+  if (btnClearAllProducts) btnClearAllProducts.addEventListener("click", handleClearAllProducts);
+
+  const btnRefreshProducts = document.getElementById("btn-refresh-products");
+  if (btnRefreshProducts) btnRefreshProducts.addEventListener("click", () => {
+    loadProducts();
+    showToast("🔄 상품 목록을 새로고침했습니다.");
+  });
+
+  // Action: Clear All Posts & Preview Test History
+  async function handleClearAllPosts() {
+    if (!confirm("⚠️ 모든 발행 히스토리 및 쓰레드 테스트 기록을 삭제하시겠습니까?")) return;
+    try {
+      const res = await fetch("/api/posts/clear-all", { method: "POST" });
+      const data = await res.json();
+      if (data.success) {
+        showToast("🗑️ " + data.message);
+        loadPosts();
+        loadPreview();
+        loadOverviewRecent();
+        loadStatus();
+      } else {
+        alert("삭제 실패: " + (data.error || "알 수 없는 오류"));
+      }
+    } catch (e) {
+      alert("삭제 통신 오류: " + e.message);
+    }
+  }
+
+  const btnClearAllPosts = document.getElementById("btn-clear-all-posts");
+  if (btnClearAllPosts) btnClearAllPosts.addEventListener("click", handleClearAllPosts);
+
+  const btnClearPreviewPosts = document.getElementById("btn-clear-preview-posts");
+  if (btnClearPreviewPosts) btnClearPreviewPosts.addEventListener("click", handleClearAllPosts);
+
+  const btnRefreshPosts = document.getElementById("btn-refresh-posts");
+  if (btnRefreshPosts) btnRefreshPosts.addEventListener("click", () => {
+    loadPosts();
+    showToast("🔄 발행 히스토리를 새로고침했습니다.");
+  });
 
   // Action: Deploy Showroom to GitHub Pages
   const btnDeployGithub = document.getElementById("btn-deploy-github");

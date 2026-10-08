@@ -218,6 +218,9 @@
                   <button class="btn btn-secondary" onclick="document.querySelector('[data-tab=showroom]').click()" style="flex: 1;">
                     <i class="ri-store-2-line"></i> 쇼룸에서 상품 확인
                   </button>
+                  <button class="btn btn-secondary" id="btn-delete-spotlight-video" style="color: #F87171; border-color: rgba(239,68,68,0.4); font-size: 12px; padding: 0 14px;" title="이 영상 삭제">
+                    <i class="ri-delete-bin-line"></i> 영상 삭제
+                  </button>
                 </div>
               </div>
             </div>
@@ -240,7 +243,10 @@
               <div class="card-box">
                 <div class="card-box-header">
                   <h3>🔗 내 모바일 쇼룸 웹페이지 링크</h3>
-                  <button class="btn btn-secondary" id="btn-refresh-showroom"><i class="ri-refresh-line"></i> 새로고침</button>
+                  <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-secondary" id="btn-clear-showroom-products" style="color: #F87171; border-color: rgba(239, 68, 68, 0.4); font-size: 12px;"><i class="ri-delete-bin-line"></i> 쇼룸 전체 초기화</button>
+                    <button class="btn btn-secondary" id="btn-refresh-showroom"><i class="ri-refresh-line"></i> 새로고침</button>
+                  </div>
                 </div>
                 <p style="font-size: 13px; color: var(--text-muted);">
                   유튜브 채널 홈(프로필) 링크란에 등록할 전용 주소입니다. 영상 속 번호(#1, #2...)와 일치하는 버튼을 누르면 고객이 1초 만에 쿠팡으로 이동합니다.
@@ -303,7 +309,10 @@
           <div class="card-box">
             <div class="card-box-header">
               <h3>🎬 생성된 15초 세로 숏츠 영상 보관함</h3>
-              <button class="btn btn-secondary" id="btn-refresh-videos"><i class="ri-refresh-line"></i> 목록 새로고침</button>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" id="btn-clear-all-videos" style="color: #F87171; border-color: rgba(239, 68, 68, 0.4); font-size: 12px;"><i class="ri-delete-bin-line"></i> 영상 전체 삭제</button>
+                <button class="btn btn-secondary" id="btn-refresh-videos"><i class="ri-refresh-line"></i> 목록 새로고침</button>
+              </div>
             </div>
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
               AI 신경망 목소리와 자막, 제품 줌인 모션이 합성된 완성형 세로 동영상(.mp4)입니다. 바로 유튜브 숏츠에 업로드하실 수 있습니다.
@@ -316,6 +325,14 @@
 
         <!-- 4. PREVIEW TAB -->
         <section class="tab-pane" id="tab-preview">
+          <div style="background: rgba(251, 191, 36, 0.08); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="font-size: 12.5px; color: #FDE047; line-height: 1.5;">
+              ℹ️ <strong>안내:</strong> 현재 쓰레드 자동 발행은 비활성화(OFF) 상태입니다. 아래 프리뷰의 내용은 이전 테스트 시 데이터베이스에 생성된 기록이며, 실제 쓰레드 계정에 발행된 것이 아닙니다.
+            </div>
+            <button class="btn btn-secondary" id="btn-clear-preview-posts" style="color: #F87171; border-color: rgba(239, 68, 68, 0.4); font-size: 12px; white-space: nowrap;">
+              <i class="ri-delete-bin-line"></i> 테스트 발행 이력 비우기
+            </button>
+          </div>
           <div class="dash-two-col">
             <!-- Left: Threads App Mockup -->
             <div>
@@ -374,8 +391,14 @@
         <section class="tab-pane" id="tab-products">
           <div class="card-box">
             <div class="card-box-header">
-              <h3>📦 디노파인더 필터 검증 완료 상품 풀</h3>
-              <span style="font-size: 12px; color: var(--text-muted);">가격 1~3만 원대 / 평점 4.5+ / 리뷰 1000+ / 로켓배송</span>
+              <div>
+                <h3>📦 디노파인더 필터 검증 완료 상품 풀</h3>
+                <span style="font-size: 12px; color: var(--text-muted);">가격 1~3만 원대 / 평점 4.5+ / 리뷰 1000+ / 로켓배송</span>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" id="btn-clear-all-products" style="color: #F87171; border-color: rgba(239, 68, 68, 0.4); font-size: 12px;"><i class="ri-delete-bin-line"></i> 전체 상품 비우기</button>
+                <button class="btn btn-secondary" id="btn-refresh-products" style="font-size: 12px;"><i class="ri-refresh-line"></i> 새로고침</button>
+              </div>
             </div>
             <table class="data-table">
               <thead>
@@ -402,6 +425,10 @@
           <div class="card-box">
             <div class="card-box-header">
               <h3>📜 자동 발행 히스토리</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary" id="btn-clear-all-posts" style="color: #F87171; border-color: rgba(239, 68, 68, 0.4); font-size: 12px;"><i class="ri-delete-bin-line"></i> 발행 이력 전체 비우기</button>
+                <button class="btn btn-secondary" id="btn-refresh-posts" style="font-size: 12px;"><i class="ri-refresh-line"></i> 새로고침</button>
+              </div>
             </div>
             <table class="data-table">
               <thead>

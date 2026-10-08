@@ -329,5 +329,38 @@ def get_stats() -> Dict[str, Any]:
     }
 
 
+def delete_product(product_id: str) -> bool:
+    """Delete a product and its associated posts from the database."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM products WHERE product_id = ?", (product_id,))
+    cursor.execute("DELETE FROM posts WHERE product_id = ?", (product_id,))
+    conn.commit()
+    conn.close()
+    return True
+
+
+def clear_all_products() -> bool:
+    """Clear all products and post records from database."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM products")
+    cursor.execute("DELETE FROM posts")
+    conn.commit()
+    conn.close()
+    return True
+
+
+def clear_all_posts() -> bool:
+    """Clear all post history records."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM posts")
+    conn.commit()
+    conn.close()
+    return True
+
+
 # Auto-init on module import
 init_db()
+

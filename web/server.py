@@ -106,6 +106,81 @@ async def get_videos():
     return videos
 
 
+@app.delete("/api/videos/{filename}")
+def delete_video(filename: str):
+    try:
+        target = VIDEOS_DIR / filename
+        if target.exists():
+            target.unlink()
+
+        # Also clean up associated thumb/audio/frames
+        stem = filename.replace("_shorts.mp4", "").replace(".mp4", "")
+        for related in VIDEOS_DIR.glob(f"{stem}*"):
+            try:
+                related.unlink()
+            except Exception:
+                pass
+
+        save_log("INFO", "videos", f"Deleted video file: {filename}")
+        return {"success": True, "message": f"{filename} 영상이 성공적으로 삭제되었습니다."}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/videos/clear-all")
+def clear_all_videos():
+    try:
+        count = 0
+        for f in list(VIDEOS_DIR.glob("*")):
+            try:
+                f.unlink()
+                count += 1
+            except Exception:
+                pass
+        save_log("INFO", "videos", f"Cleared all video files ({count} files).")
+        return {"success": True, "message": f"모든 영상 및 임시 파일 {count}개가 삭제되었습니다."}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.delete("/api/products/{product_id}")
+def delete_single_product(product_id: str):
+    from database.db import delete_product
+    from modules.showroom.builder import ShowroomBuilder
+    try:
+        delete_product(product_id)
+        ShowroomBuilder.build_showroom_html()
+        save_log("INFO", "showroom", f"Deleted product {product_id} and refreshed showroom catalog.")
+        return {"success": True, "message": "상품이 삭제되고 모바일 쇼룸 카탈로그가 갱신되었습니다."}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/products/clear-all")
+def clear_all_products_endpoint():
+    from database.db import clear_all_products
+    from modules.showroom.builder import ShowroomBuilder
+    try:
+        clear_all_products()
+        ShowroomBuilder.build_showroom_html()
+        save_log("INFO", "showroom", "Cleared all products and refreshed showroom catalog.")
+        return {"success": True, "message": "모든 상품이 삭제되고 모바일 쇼룸이 초기화되었습니다."}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/posts/clear-all")
+def clear_all_posts_endpoint():
+    from database.db import clear_all_posts
+    try:
+        clear_all_posts()
+        save_log("INFO", "history", "Cleared all post history.")
+        return {"success": True, "message": "모든 발행 기록이 삭제되었습니다."}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+
 @app.get("/api/youtube/status")
 def get_youtube_status():
     from modules.publisher.youtube_api import YouTubePublisher
